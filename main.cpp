@@ -200,6 +200,7 @@ int main(int argc, char **argv)
 	miget_dimension_sizes(dimensions, 3, sizes_tmp);
 	// allocate new dimensions
 	dimensions_new = (midimhandle_t *) malloc(sizeof(midimhandle_t) * 3);
+	//std::vector<midimhandle_t> dimensions_new(sizeof(midimhandle_t) * 3);
 	for (i=0; i < 3; i++) {
 		//////////////////Why is this here///////////////////////
 		sizes[i] = (unsigned int) sizes_tmp[i];
@@ -232,6 +233,7 @@ int main(int argc, char **argv)
 	/* the start and counts */
 	start[0] = start[1] = start[2] = 0;
 	// First allocate enough memory to hold one slice of data
+	//std::vector<double> slab(sizes[0]*sizes[1]*sizes[2]);
 	slab = (double*) malloc(sizeof(double) * sizes[0] * sizes[1] * sizes[2]);
 
 	// Initialize new hyperslab for the label file with zeros everywhere
@@ -246,7 +248,8 @@ int main(int argc, char **argv)
   		vector< vector<double> > contour = it->second;
 
 			// create 400x400 matrix
-			tmpSlice = new double[ sizes[1]*sizes[2] ];
+			std::vector<double> tmpSlice(sizes[1]*sizes[2]);
+			//tmpSlice = new double[ sizes[1]*sizes[2] ];
 
 			//Fill 400x400 matrix with 0's
 			for (i=0; i < sizes[1] * sizes[2]; i++){
@@ -372,9 +375,9 @@ int main(int argc, char **argv)
 	miclose_volume(label_volume);
 
 	// free memory
-	free(dimensions_new);
-	free(tmpSlice);
-	free(slab);
+	//free(dimensions_new);
+	//free(tmpSlice);
+	//free(slab);
 
 	// Convert back to minc 1 volume and save to wanted location
 	std::string s_outfiles = "mincconvert -clobber /tmp/minc_plugins/label_volume.mnc ";
