@@ -13,6 +13,7 @@
 #include <set>
 #include <ParseArgv.h>
 #include <queue>
+#include <typeinfo>
 
 #include "dcmtk/dcmdata/dctk.h"
 #include "dcmtk/dcmimgle/dcmimage.h"
@@ -27,7 +28,7 @@ char 		*pname;
 char 		**infiles, **outfiles;
 
 /* Varies for the RT struct and MINC volume */
-int 		i,j,slice, iter, coordinate_counter, first_voxel_at_slice, xyz_counter, cord_i, vox_i, contour_voxel, TargetColour, NewColour, starting_point, WestNode, EastNode, SouthNode, NorthNode, Node;
+int 		i,j,slice, iter, coordinate_counter, first_voxel_at_slice, xyz_counter, cord_i, vox_i, contour_voxel, TargetColour, NewColour, starting_point, WestNode, EastNode, SouthNode, NorthNode, Node, EastNodeBoundaryCheck, WestNodeBoundaryCheck, SouthNodeBoundaryCheck, NorthNodeBoundaryCheck;
 misize_t start[3], counter[3];
 unsigned int  sizes[3];
 double        *slab, *tmpSlice;
@@ -111,7 +112,6 @@ int main(int argc, char **argv)
 						//Tag DCM_ContourData (3006,0050)
   					ContourSequence->findAndGetString(DCM_ContourData, cdata, 4);
   					string s_cdata(cdata);
-						//printf("%s\n", cdata);
   					// Extract each combination of x,y,z coordinates and insert them in map
   					size_t pos = 0;
   					string token;
@@ -149,23 +149,6 @@ int main(int argc, char **argv)
 
   					// Add all points from contour to map of contours
   					contours.insert( pair< int,vector< vector<double> > >(iter,xyz_coordinates));
-
-
-						// while((pos = s_cdata.find(delimiter)) != string::npos){
-						// 	token = s_cdata.substr(0,pos);
-						// 	vector<double> new_point(1,3);
-						// 	xyz_coordinates.push_back(new_point);
-						// 	xyz_counter = 0;
-						// 	cout << "Hello2";
-						// 	while(xyz_counter != 3){
-						// 		xyz_coordinates[coordinate_counter].push_back(atof(token.c_str()));
-						// 		xyz_counter += 1;
-						// 		coordinate_counter += 1;
-						// 		s_cdata.erase(0,pos+delimiter.length());
-						// 	}
-						// }
-						// xyz_coordinates[coordinate_counter].push_back(atof(s_cdata.c_str()));
-						// contours.insert( pair< int,vector< vector<double> > >(iter,xyz_coordinates));
   				}
 
   			}
@@ -200,7 +183,7 @@ int main(int argc, char **argv)
 	miget_dimension_sizes(dimensions, 3, sizes_tmp);
 	// allocate new dimensions
 	dimensions_new = (midimhandle_t *) malloc(sizeof(midimhandle_t) * 3);
-	//std::vector<midimhandle_t> dimensions_new(sizeof(midimhandle_t) * 3);
+	//segmentation fault with: std::vector<midimhandle_t *> dimensions_new(3);
 	for (i=0; i < 3; i++) {
 		//////////////////Why is this here///////////////////////
 		sizes[i] = (unsigned int) sizes_tmp[i];
@@ -233,12 +216,13 @@ int main(int argc, char **argv)
 	/* the start and counts */
 	start[0] = start[1] = start[2] = 0;
 	// First allocate enough memory to hold one slice of data
-	//std::vector<double> slab(sizes[0]*sizes[1]*sizes[2]);
+	//segmentation fault with: std::vector<double> slab(sizes[0]*sizes[1]*sizes[2]);
 	slab = (double*) malloc(sizeof(double) * sizes[0] * sizes[1] * sizes[2]);
 
 	// Initialize new hyperslab for the label file with zeros everywhere
   for (i=0; i < sizes[0] * sizes[1] * sizes[2]; i++) {
 		slab[i] = 0.0;
+
 	}
 
 
@@ -247,19 +231,18 @@ int main(int argc, char **argv)
   	for(it=contours.begin(); it!= contours.end(); ++it){
   		vector< vector<double> > contour = it->second;
 
+			//segmentation fault with: std::vector<double> tmpSlice(sizes[1]*sizes[2]);
 			// create 400x400 matrix
-			std::vector<double> tmpSlice(sizes[1]*sizes[2]);
-			//tmpSlice = new double[ sizes[1]*sizes[2] ];
-
+			tmpSlice = new double[sizes[1]*sizes[2]];
 			//Fill 400x400 matrix with 0's
 			for (i=0; i < sizes[1] * sizes[2]; i++){
 				tmpSlice[i] = 0.0;
 			}
 
-		for(cord_i = 0; cord_i < contour.size(); ++cord_i){
+	  for(cord_i = 0; cord_i < contour.size(); ++cord_i){
 			// Convert to voxel coordinate
-			world_location[0] = -contour[cord_i][1]; // manual -1* (why?)
-			world_location[1] = -contour[cord_i][2]; // manual -1* (why?)
+			world_location[0] = -contour[cord_i][1];
+			world_location[1] = -contour[cord_i][2];
 			world_location[2] = contour[cord_i][3];
 			miconvert_world_to_voxel(container_volume, world_location, dvoxel_location);
 			for (vox_i=0; vox_i<3; vox_i++){
@@ -267,98 +250,100 @@ int main(int argc, char **argv)
 			}
 
 			// Calculate the position in the hyperslab
-			//int contour_voxel = voxel_location[0]*sizes[1]*sizes[2] + voxel_location[1]*sizes[2] + voxel_location[2];
-			//if(slice == 0){
-			first_voxel_at_slice = voxel_location[0]*sizes[1]*sizes[2];
-			//}
+			first_voxel_at_slice = sizes[1]*sizes[2]*voxel_location[0];
 
-			contour_voxel = voxel_location[1]*sizes[2] + voxel_location[2];
-			//slab[contour_voxel] = 1.0;
+			contour_voxel = sizes[2]*voxel_location[1] + voxel_location[2];
 			// Set new label value to 1
+			//printf("%i\n", contour_voxel);
 			tmpSlice[contour_voxel] = 1.0;
+		 }
 
-		}
-		/* Flood fill */
-		//Doing this contour number of times.
-		//Colour we are looking for as background
-		TargetColour = 0.0;
-		//The new colour we will write
-		NewColour = 2.0;
-		//create set
-		set < int > Set;
-		//Create queue
-		queue < int > MyQue;
-		int coun = 0;
-		//Insert first point into the queue
-		MyQue.push(first_voxel_at_slice);
-		//While loop for iterating over the nodes.
-		while (!MyQue.empty()){
-			//Set front element to Node, and pop the front element from queue
-			Node = MyQue.front();
-			MyQue.pop();
+		 /* Flood fill */
+		 //Colour we are looking for as background
+		 TargetColour = 0.0;
+		 //The new colour we will write
+		 NewColour = 2.0;
+		 //create set to secure unique entries into the queue, otherwise we etc. insert the 9th element in a 3x3 array 6 times.
+		 set < int > Set;
+		 //Create queue
+		 queue < int > MyQue;
+		 //Insert first point into the queue
+		 MyQue.push(0);
+		 //While loop for iterating over the nodes.
+		 while (!MyQue.empty()){
+			 //Set front element to Node, and pop the front element from queue
+			 Node = MyQue.front();
+			 MyQue.pop();
+			 //Change the colour to newcolour
+			 tmpSlice[Node] = NewColour;
+			 //Define the Node directions
+			 WestNode = Node-1;
+			 EastNode = Node+1;
 
-			coun = coun + 1;
-			//Change the colour to newcolour
-			tmpSlice[Node] = NewColour;
 
-			//Define the Node directions
-			WestNode = Node-1;
-			EastNode = Node+1;
-			//sizes are the lengths x,y
-			NorthNode = Node-sizes[1];
-			SouthNode = Node+sizes[2];
-			std::cout << "MyQue size: " << MyQue.size() << '\n';
+			 //sizes are the lengths x,y
+			 NorthNode = Node-sizes[1];
+			 SouthNode = Node+sizes[2];
 
-			//East Node
-			if (tmpSlice[EastNode] == TargetColour && floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((EastNode-sizes[1]*sizes[2]*floor(EastNode/(sizes[1]*sizes[2])))/sizes[1])){
-				if (Set.insert(EastNode).second) {
+			 //Boundary checks
+			 EastNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((EastNode-sizes[1]*sizes[2]*floor(EastNode/(sizes[1]*sizes[2])))/sizes[1]);
+			 SouthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(SouthNode / (sizes[1]*sizes[2]));
+			 WestNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((WestNode-sizes[1]*sizes[2]*floor(WestNode/(sizes[1]*sizes[2])))/sizes[1]);
+			 NorthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(NorthNode / (sizes[1]*sizes[2]));
+
+
+			 //East Node
+			 if (Set.insert(EastNode).second) {
+			 	if (tmpSlice[EastNode] == TargetColour && EastNodeBoundaryCheck == 1){
     				MyQue.push(EastNode);
-					}
-			}
+				 }
+			  }
 
-			//West Node
-			if (tmpSlice[WestNode] == TargetColour && floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((WestNode-sizes[1]*sizes[2]*floor(WestNode/(sizes[1]*sizes[2])))/sizes[1])){
-				if (Set.insert(WestNode).second) {
+				//South Node
+ 			 if (Set.insert(SouthNode).second) {
+				 if (SouthNode < sizes[1]*sizes[2]){
+					 if (tmpSlice[SouthNode] == TargetColour && SouthNodeBoundaryCheck == 1){
+							 MyQue.push(SouthNode);
+					 }
+				 }
+ 			 }
+
+			 //West Node
+			 if (Set.insert(WestNode).second) {
+			  if (tmpSlice[WestNode] == TargetColour && WestNodeBoundaryCheck == 1){
     				MyQue.push(WestNode);
-					}
-			}
+			   }
+		  	}
 
-			//North Node
-			if (tmpSlice[NorthNode] == TargetColour && floor(Node / (sizes[1]*sizes[2])) == floor(NorthNode / (sizes[1]*sizes[2]))){
-				if (Set.insert(NorthNode).second) {
-    				MyQue.push(NorthNode);
-					}
-			}
-
-			//South Node
-			if (tmpSlice[SouthNode] == TargetColour && floor(Node / (sizes[1]*sizes[2])) == floor(SouthNode / (sizes[1]*sizes[2]))){
-				if (Set.insert(SouthNode).second) {
-    				MyQue.push(SouthNode);
-					}
-			}
+			 //North Node
+			 if (Set.insert(NorthNode).second) {
+				 if (NorthNode >= 0){
+					 if (tmpSlice[NorthNode] == TargetColour && NorthNodeBoundaryCheck == 1){
+							 MyQue.push(NorthNode);
+						 }
+				 }
+ 		  	}
 
 		}
-		// Insert inner region into slab runs sizes[1] * sizes[2] = 160000 times
-		for(i = 0; i < sizes[1]*sizes[2]; i++){
-			if(tmpSlice[i] < NewColour){
-				slab[first_voxel_at_slice + i] += 1.0;
-			}
-
+		/* We wanna make sure that we plus with 1 inside the contour,
+		this way we make sure that when we insert another smaller contour inside the big contour
+		the value gets set to 2.0 inside the small contour such that when we modulo we set that value to 0
+		*/
+	for(i = 1; i < sizes[1]*sizes[2]+1; i++){
+		if(tmpSlice[i] < NewColour){
+			slab[first_voxel_at_slice + i] += 1.0;
 		}
-		fprintf(stderr, "Flood while: %i \n", coun);
 	}
-	int cnt = 0;
-	std::cout << "Outside of scope: " << cnt << '\n';
-
-	for (i=0; i < sizes[0] * sizes[1] * sizes[2]; i++) {
-	 slab[i] = ((fmod(slab[i], 2.0) == 0.0) ? 0.0 : 1.0);
-	}
+}//End contour loop
+/*We modulo so we can remove all the two's and this removes everything outside of the contour and
+everything inside the contour such as smaller contours*/
+for (i=0; i < sizes[0] * sizes[1] * sizes[2]; i++) {
+ slab[i] = ((fmod(slab[i], 2.0) == 0.0) ? 0.0 : 1.0);
+}
 
 
 	fprintf(stderr, "Writing volume and data to file: %s\n",outfiles[0]);
 	////////Code below is taken from //////////////Taken from https://en.wikibooks.org/wiki/MINC/Tutorials/Programming05 //////
-
-
 
 	/* set the slice scaling */
 	miset_slice_range(label_volume, start, 3, 1, 0);
@@ -375,9 +360,9 @@ int main(int argc, char **argv)
 	miclose_volume(label_volume);
 
 	// free memory
-	//free(dimensions_new);
-	//free(tmpSlice);
-	//free(slab);
+	free(dimensions_new);
+	free(slab);
+	free(tmpSlice);
 
 	// Convert back to minc 1 volume and save to wanted location
 	std::string s_outfiles = "mincconvert -clobber /tmp/minc_plugins/label_volume.mnc ";

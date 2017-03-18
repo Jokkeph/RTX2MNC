@@ -37,6 +37,8 @@ ParseArgv.h
 -
 queue
 -
+typeinfo
+-
 dcmtk/dcmdata/dctk.h
 /home/pet/Desktop/Ubuntu-Reformat/rtx2mnc/dcmtk/dcmdata/dctk.h
 dcmtk/dcmimgle/dcmimage.h
