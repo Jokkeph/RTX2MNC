@@ -1,11 +1,11 @@
 ## Authors
 Rigshospitalet - Klinik for Klinisk Fysiologi og Nuklearmedicin PET- og Cyklotronenheden 
   - Joachim Hansen <joachim.pries.hansen@regionh.dk>
-  - Claes Ladefoged 
+Build upon Claes Ladefoged's repository https://github.com/claesnl/rtx2mnc
 
 # RTX2MNC  
 
-Converts a RT-structure from MIRADA to a MNC label file with the contours set to 1.
+Converts a RT-structure from MIRADA to a MNC label file with the filled contours set to 1. 
 The program takes as input the volume file used to create the RTx struct, e.g. a PET image, in MNC format as well. The output label file will match the input volumes image dimensions.
 
 ## Installation:
