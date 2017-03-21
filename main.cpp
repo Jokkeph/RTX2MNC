@@ -268,7 +268,7 @@ int main(int argc, char **argv)
 		 //Create queue
 		 queue < int > MyQue;
 		 //Insert first point into the queue
-		 MyQue.push(0);
+		 MyQue.push(1);
 		 //While loop for iterating over the nodes.
 		 while (!MyQue.empty()){
 			 //Set front element to Node, and pop the front element from queue
@@ -285,24 +285,24 @@ int main(int argc, char **argv)
 			 NorthNode = Node-sizes[1];
 			 SouthNode = Node+sizes[2];
 
-			 //Boundary checks
-			 EastNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((EastNode-sizes[1]*sizes[2]*floor(EastNode/(sizes[1]*sizes[2])))/sizes[1]);
-			 SouthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(SouthNode / (sizes[1]*sizes[2]));
-			 WestNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((WestNode-sizes[1]*sizes[2]*floor(WestNode/(sizes[1]*sizes[2])))/sizes[1]);
-			 NorthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(NorthNode / (sizes[1]*sizes[2]));
+			 //Boundary checks for 3d only. might be needed in the future
+			//  EastNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((EastNode-sizes[1]*sizes[2]*floor(EastNode/(sizes[1]*sizes[2])))/sizes[1]);
+			//  SouthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(SouthNode / (sizes[1]*sizes[2]));
+			//  WestNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((WestNode-sizes[1]*sizes[2]*floor(WestNode/(sizes[1]*sizes[2])))/sizes[1]);
+			//  NorthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(NorthNode / (sizes[1]*sizes[2]));
 
 
 			 //East Node
 			 if (Set.insert(EastNode).second) {
-			 	if (tmpSlice[EastNode] == TargetColour && EastNodeBoundaryCheck == 1){
+			 	if (tmpSlice[EastNode] == TargetColour){
     				MyQue.push(EastNode);
 				 }
 			  }
 
 				//South Node
  			 if (Set.insert(SouthNode).second) {
-				 if (SouthNode < sizes[1]*sizes[2]){
-					 if (tmpSlice[SouthNode] == TargetColour && SouthNodeBoundaryCheck == 1){
+				 if (SouthNode <= sizes[1]*sizes[2]){
+					 if (tmpSlice[SouthNode] == TargetColour){
 							 MyQue.push(SouthNode);
 					 }
 				 }
@@ -310,7 +310,7 @@ int main(int argc, char **argv)
 
 			 //West Node
 			 if (Set.insert(WestNode).second) {
-			  if (tmpSlice[WestNode] == TargetColour && WestNodeBoundaryCheck == 1){
+			  if (tmpSlice[WestNode] == TargetColour){
     				MyQue.push(WestNode);
 			   }
 		  	}
@@ -318,7 +318,7 @@ int main(int argc, char **argv)
 			 //North Node
 			 if (Set.insert(NorthNode).second) {
 				 if (NorthNode >= 0){
-					 if (tmpSlice[NorthNode] == TargetColour && NorthNodeBoundaryCheck == 1){
+					 if (tmpSlice[NorthNode] == TargetColour){
 							 MyQue.push(NorthNode);
 						 }
 				 }
@@ -329,11 +329,15 @@ int main(int argc, char **argv)
 		this way we make sure that when we insert another smaller contour inside the big contour
 		the value gets set to 2.0 inside the small contour such that when we modulo we set that value to 0
 		*/
-	for(i = 1; i < sizes[1]*sizes[2]+1; i++){
+
+	for(i = 0; i < sizes[1]*sizes[2]; i++){
 		if(tmpSlice[i] < NewColour){
 			slab[first_voxel_at_slice + i] += 1.0;
 		}
 	}
+
+	// cout << "Second sentence." <<slab[400*152*12] <<endl;
+
 }//End contour loop
 /*We modulo so we can remove all the two's and this removes everything outside of the contour and
 everything inside the contour such as smaller contours*/
