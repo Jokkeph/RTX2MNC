@@ -1,7 +1,8 @@
 ## Authors
 Rigshospitalet - Klinik for Klinisk Fysiologi og Nuklearmedicin PET- og Cyklotronenheden 
   - Joachim Hansen <joachim.pries.hansen@regionh.dk>
-Build upon Claes Ladefoged's repository https://github.com/claesnl/rtx2mnc
+  
+> Build upon Claes Ladefoged's repository https://github.com/claesnl/rtx2mnc
 
 # RTX2MNC  
 
