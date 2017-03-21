@@ -1,12 +1,9 @@
-Authors
-------
+## Authors
+
   Joachim Hansen <joachim.pries.hansen@regionh.dk>
   Claes Ladefoged 
-  Rigshospitalet
-  Klinik for Klinisk Fysiologi og Nuklearmedicin
-  PET- og Cyklotronenheden 
+  Rigshospitalet - Klinik for Klinisk Fysiologi og Nuklearmedicin PET- og Cyklotronenheden 
   Denmark
-"""
 
 # RTX2MNC  
 
