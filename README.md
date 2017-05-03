@@ -57,4 +57,9 @@ If you run into library problems during the
 command then run 
 <pre><code>ccmake ..
 t</code></pre> 
-Now scroll down to either DCMTK_DIR and set the right path(/usr/DCMTK) or scroll down to MIND_INCLUDE_DIR(/opt/minc/include) and  MINC_minc3_LIBRARY(/opt/minc/lib/libminc2.so) and set the right path for the files. My path is the one in parentheses. 
+Now scroll down to either DCMTK_DIR and set the right path(/usr/DCMTK) or scroll down to MIND_INCLUDE_DIR(/opt/minc/include) and  MINC_minc3_LIBRARY(/opt/minc/lib/libminc2.so) and set the right path for the files. My path is the one in parentheses.
+When finished press:
+<pre><code>
+c
+g
+</code></pre>
