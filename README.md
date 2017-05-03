@@ -52,5 +52,9 @@ echo 'export PERL5LIB=$PERL5LIB:/opt/minc/perl' >> ~/.bash_profile
 source ~/.bash_profile
 </code></pre>
 ## Troubleshooting
-If you run into library problems during the <pre><code>cmake ..</code></pre> command then run <pre><code>ccmake ..</code></pre> press t. 
+If you run into library problems during the 
+<pre><code>cmake ..</code></pre> 
+command then run 
+<pre><code>ccmake ..
+t</code></pre> 
 Now scroll down to either DCMTK_DIR and set the right path(/usr/DCMTK) or scroll down to MIND_INCLUDE_DIR(/opt/minc/include) and  MINC_minc3_LIBRARY(/opt/minc/lib/libminc2.so) and set the right path for the files. My path is the one in parentheses. 
