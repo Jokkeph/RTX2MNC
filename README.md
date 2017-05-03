@@ -63,3 +63,26 @@ When finished press:
 c
 g
 </code></pre>
+##Error loading shared libraries
+
+<pre><code>
+
+Error: rtx2mnc: error while loading shared libraries: libminc2.so.5.0.1: cannot open shared object file: No such file or directory
+
+Solution:
+(1 ) Find where the library is placed if you don't know it.
+
+cd /
+sudo find ./ | grep the_name_of_the_file.so
+(2) Check for the existence of the dynamic library path environnement variable(LD_LIBRARY_PATH)
+
+$ echo $LD_LIBRARY_PATH
+if there is nothing to be display we need to add the default path value (or not as you wich)
+
+$ LD_LIBRARY_PATH=/usr/local/lib
+(3) We add the desire path and export it and try the application
+
+$ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/my_library/path.so.something
+$ export LD_LIBRARY_PATH
+$ ./my_app
+</code></pre>
