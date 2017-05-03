@@ -63,7 +63,7 @@ When finished press:
 c
 g
 </code></pre>
-##Error loading shared libraries
+## Error loading shared libraries
 
 <pre><code>
 
