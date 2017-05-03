@@ -34,16 +34,20 @@ rtx2mnc < VOLUME.mnc > < RTx > < out_label.mnc >
 
 ## Installing Dependencies
 ### DCMTK
-  - git clone https://github.com/commontk/DCMTK.git
-  - cd DCMTK
-  - ./configure
-  - make all
-  - sudo make install-all
+<pre><code>
+git clone https://github.com/commontk/DCMTK.git
+cd DCMTK
+./configure
+make all
+sudo make install-all
+</code></pre>
 ### Minc
-  - wget http://packages.bic.mni.mcgill.ca/minc-toolkit/RPM/minc-toolkit-1.0.08-20160205-CentOS_6.7-x86_64.rpm
-  - sudo rpm -Uvh minc-toolkit-1.0.08-20160205-CentOS_6.7-x86_64.rpm
+<pre><code>
+wget http://packages.bic.mni.mcgill.ca/minc-toolkit/RPM/minc-toolkit-1.0.08-20160205-CentOS_6.7-x86_64.rpm
+sudo rpm -Uvh minc-toolkit-1.0.08-20160205-CentOS_6.7-x86_64.rpm
 
-  - echo 'export PATH=$PATH:/opt/minc/bin' >> ~/.bash_profile
-  - echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/minc/lib' >> ~/.bash_profile
-  - echo 'export PERL5LIB=$PERL5LIB:/opt/minc/perl' >> ~/.bash_profile
-  - source ~/.bash_profile
+echo 'export PATH=$PATH:/opt/minc/bin' >> ~/.bash_profile
+echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/minc/lib' >> ~/.bash_profile
+echo 'export PERL5LIB=$PERL5LIB:/opt/minc/perl' >> ~/.bash_profile
+source ~/.bash_profile
+</code></pre>
