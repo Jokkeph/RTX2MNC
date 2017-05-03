@@ -33,12 +33,13 @@ rtx2mnc < VOLUME.mnc > < RTx > < out_label.mnc >
  - DCMTK
 
 ## Installing Dependencies
+### DCMTK
   - git clone https://github.com/commontk/DCMTK.git
   - cd DCMTK
   - ./configure
   - make all
   - sudo make install-all
-  
+### Minc
   - wget http://packages.bic.mni.mcgill.ca/minc-toolkit/RPM/minc-toolkit-1.0.08-20160205-CentOS_6.7-x86_64.rpm
   - sudo rpm -Uvh minc-toolkit-1.0.08-20160205-CentOS_6.7-x86_64.rpm
 
