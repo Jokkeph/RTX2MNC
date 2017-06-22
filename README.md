@@ -78,16 +78,16 @@ sudo find ./ | grep the_name_of_the_file.so
 </code></pre>
 (2) Check for the existence of the dynamic library path environnement variable(LD_LIBRARY_PATH)
 <pre><code>
-$ echo $LD_LIBRARY_PATH
+echo $LD_LIBRARY_PATH
 </code></pre>
 if there is nothing to be display we need to add the default path value
 <pre><code>
-$ LD_LIBRARY_PATH=/usr/local/lib
+LD_LIBRARY_PATH=/usr/local/lib
 </code></pre>
 (3) We now add the desire path and export it and try the application
 <pre><code>
-$ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/my_library/path.so.something
-$ export LD_LIBRARY_PATH
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/my_library/path.so.something
+export LD_LIBRARY_PATH
 </code></pre>
 In my case the commands were
 <pre><code>
