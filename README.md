@@ -68,6 +68,7 @@ g
 <pre><code>
 
 Error: rtx2mnc: error while loading shared libraries: libminc2.so.5.0.1: cannot open shared object file: No such file or directory
+</code></pre>
 
 Solution:
 (1 ) Find where the library is placed if you don't know it.
@@ -87,7 +88,6 @@ $ LD_LIBRARY_PATH=/usr/local/lib
 <pre><code>
 $ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/my_library/path.so.something
 $ export LD_LIBRARY_PATH
-</code></pre>
 </code></pre>
 In my case the commands were
 <pre><code>
