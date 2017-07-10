@@ -32,11 +32,26 @@ int 		i,j,slice, iter, coordinate_counter, first_voxel_at_slice, xyz_counter, co
 misize_t start[3], counter[3];
 unsigned int  sizes[3];
 double        *slab, *tmpSlice;
-double        world_location[3];
-double        dvoxel_location[3];
+double        world_location[3], step, xSvox, xEvox, ySvox, yEvox, slope, dvoxel_location[3];
 unsigned long voxel_location[3];
 map< int,vector< vector<double> > > contours;
 
+// linear interpolate x in an array
+// inline
+float interp1( double x, double a[], int n )
+{
+ if( x <= 0 )  return a[0];
+ if( x >= n - 1 )  return a[n-1];
+ int j = int(x);
+ return a[j] + (x - j) * (a[j+1] - a[j]);
+}
+// linear interpolate array a[] -> array b[]
+void inter1parray( double a[], int n, double b[], int m ){
+ double step = double( n - 1 ) / (m - 1);
+ for( int j = 0; j < m; j ++ ){
+		b[j] = interp1( j*step, a, n );
+ }
+}
 
 /*Main start */
 int main(int argc, char **argv)
@@ -118,11 +133,9 @@ int main(int argc, char **argv)
   					string delimiter = "\\";
   					coordinate_counter = 0;
 						xyz_counter = 0;
-
   					while((pos = s_cdata.find(delimiter)) != string::npos){
 							//http://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
   						token = s_cdata.substr(0,pos);
-
   						// If 0, we are at x again, add new coordinate point to vector
   						if(xyz_counter == 0){
   							vector<double> new_point(1,3);
@@ -141,10 +154,10 @@ int main(int argc, char **argv)
   						}
 
   						s_cdata.erase(0,pos+delimiter.length());
+
   					}
   					// Add final z that is left in the sequence
   					xyz_coordinates[coordinate_counter].push_back(atof(s_cdata.c_str()));
-
 
 
   					// Add all points from contour to map of contours
@@ -230,7 +243,8 @@ int main(int argc, char **argv)
 	map< int , vector < vector<double> > >::iterator it = contours.begin();
   	for(it=contours.begin(); it!= contours.end(); ++it){
   		vector< vector<double> > contour = it->second;
-
+			std::vector< double > arrX;
+			std::vector< double > arrY;
 			//segmentation fault with: std::vector<double> tmpSlice(sizes[1]*sizes[2]);
 			// create 400x400 matrix
 			tmpSlice = new double[sizes[1]*sizes[2]];
@@ -238,7 +252,6 @@ int main(int argc, char **argv)
 			for (i=0; i < sizes[1] * sizes[2]; i++){
 				tmpSlice[i] = 0.0;
 			}
-
 	  for(cord_i = 0; cord_i < contour.size(); ++cord_i){
 			// Convert to voxel coordinate
 			world_location[0] = -contour[cord_i][1];
@@ -246,19 +259,81 @@ int main(int argc, char **argv)
 			world_location[2] = contour[cord_i][3];
 			miconvert_world_to_voxel(container_volume, world_location, dvoxel_location);
 			for (vox_i=0; vox_i<3; vox_i++){
+								dvoxel_location[vox_i] = dvoxel_location[vox_i] + 0.5;
+			}
+
+			for (vox_i=0; vox_i<3; vox_i++){
 								voxel_location[vox_i] = (unsigned long) dvoxel_location[vox_i];
 			}
 
 			// Calculate the position in the hyperslab
 			first_voxel_at_slice = sizes[1]*sizes[2]*voxel_location[0];
+			arrX.push_back(voxel_location[1]);
+			arrY.push_back(voxel_location[2]);
 
 			contour_voxel = sizes[2]*voxel_location[1] + voxel_location[2];
 			// Set new label value to 1
-			//printf("%i\n", contour_voxel);
 			tmpSlice[contour_voxel] = 1.0;
 		 }
+      /* ----------------- Interpolation ----------------- */
+     //Chose a step size that you want to increase x with.
+     step = 0.0001;
+     //Iterate over all the coordinates one at a time
+     for(i = 0; i < arrX.size()-1; ++i){
+       //Create variables for x1,y1,x2,y2
+       xSvox = arrX[i];
+       xEvox = arrX[i+1];
+       ySvox = arrY[i];
+       yEvox = arrY[i+1];
+       //Calculate the slope of the two coordinates above
+       slope = (yEvox - ySvox) / (xEvox - xSvox);
+       //If xEvox is to the left of xSvox, we need to draw from xEvox
+      if(xSvox > xEvox){
+        while(floor(xSvox) != floor(xEvox)){
+            //Move x the stepsise chosen
+            xEvox = xEvox + step;
+            //Move y to the right using the slope and stepsize
+            yEvox = yEvox + slope * step;
+            //Calculate place in 2D slice and insert 1 as the value
+            contour_voxel = sizes[2] * floor(xEvox) + floor(yEvox);
+            tmpSlice[contour_voxel] = 1;
+          }
+       }
+      //If xSvox is to the left of xEvox, we need to draw from xSvox
+      else if(xSvox < xEvox){
+        while(floor(xSvox) != floor(xEvox)){
+            //Move x the stepsise chosen
+            xSvox = xSvox + step;
+            //Move y to the right using the slope and stepsize
+            ySvox = ySvox + slope * step;
+            //Calculate place in 2D slice and insert 1 as the value
+            contour_voxel = sizes[2] * floor(xSvox) + floor(ySvox);
+            tmpSlice[contour_voxel] = 1;
+          }
+       }
+       //If the X's are equal we need to find the smallest y and plus with stepsize until the Y's are equal
+       else if(ySvox < yEvox){
+         while(floor(ySvox) != floor(yEvox)){
+           //Take 1 stepsize down
+           ySvox = ySvox + step;
+           //Calculate place in 2D slice and insert 1 as the value
+           contour_voxel = sizes[2] * xSvox + floor(ySvox);
+           tmpSlice[contour_voxel] = 1;
+         }
+       }
+       // X's are equal find smallest y and plus with stepsize until the Y's are equal
+       else if(ySvox > yEvox){
+         while(floor(ySvox) != floor(yEvox)){
+           //Take 1 stepsize up
+           yEvox = yEvox + step;
+           //Calculate place in 2D slice and insert 1 as the value
+           contour_voxel = sizes[2] * xEvox + floor(yEvox);
+           tmpSlice[contour_voxel] = 1;
+         }
+       }
+		 }
 
-		 /* Flood fill */
+		 /* ----------------- Flood fill ----------------- */
 		 //Colour we are looking for as background
 		 TargetColour = 0.0;
 		 //The new colour we will write
@@ -271,7 +346,7 @@ int main(int argc, char **argv)
 		 MyQue.push(1);
 		 //While loop for iterating over the nodes.
 		 while (!MyQue.empty()){
-			 //Set front element to Node, and pop the front element from queue
+		//Set front element to Node, and pop the front element from queue
 			 Node = MyQue.front();
 			 MyQue.pop();
 			 //Change the colour to newcolour
@@ -285,11 +360,11 @@ int main(int argc, char **argv)
 			 NorthNode = Node-sizes[1];
 			 SouthNode = Node+sizes[2];
 
-			 //Boundary checks for 3d only. might be needed in the future
-			//  EastNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((EastNode-sizes[1]*sizes[2]*floor(EastNode/(sizes[1]*sizes[2])))/sizes[1]);
-			//  SouthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(SouthNode / (sizes[1]*sizes[2]));
-			//  WestNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((WestNode-sizes[1]*sizes[2]*floor(WestNode/(sizes[1]*sizes[2])))/sizes[1]);
-			//  NorthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(NorthNode / (sizes[1]*sizes[2]));
+		 	 //Boundary checks for 3d only. might be needed in the future
+		 	//  EastNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((EastNode-sizes[1]*sizes[2]*floor(EastNode/(sizes[1]*sizes[2])))/sizes[1]);
+		 	//  SouthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(SouthNode / (sizes[1]*sizes[2]));
+		 	//  WestNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((WestNode-sizes[1]*sizes[2]*floor(WestNode/(sizes[1]*sizes[2])))/sizes[1]);
+		 	//  NorthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(NorthNode / (sizes[1]*sizes[2]));
 
 
 			 //East Node
@@ -325,10 +400,9 @@ int main(int argc, char **argv)
  		  	}
 
 		}
-		/* We wanna make sure that we plus with 1 inside the contour,
-		this way we make sure that when we insert another smaller contour inside the big contour
-		the value gets set to 2.0 inside the small contour such that when we modulo we set that value to 0
-		*/
+		//We wanna make sure that we plus with 1 inside the contour,
+		//this way we make sure that when we insert another smaller contour inside the big contour
+		//the value gets set to 2.0 inside the small contour such that when we modulo we set that value to 0
 
 	for(i = 0; i < sizes[1]*sizes[2]; i++){
 		if(tmpSlice[i] < NewColour){
@@ -336,7 +410,13 @@ int main(int argc, char **argv)
 		}
 	}
 
-	// cout << "Second sentence." <<slab[400*152*12] <<endl;
+	for(i = 0; i < sizes[1]*sizes[2]; i++){
+		if(tmpSlice[i] == 1){
+			slab[first_voxel_at_slice + i] += 1.0;
+		}
+	}
+
+
 
 }//End contour loop
 /*We modulo so we can remove all the two's and this removes everything outside of the contour and
@@ -345,12 +425,11 @@ for (i=0; i < sizes[0] * sizes[1] * sizes[2]; i++) {
  slab[i] = ((fmod(slab[i], 2.0) == 0.0) ? 0.0 : 1.0);
 }
 
-
 	fprintf(stderr, "Writing volume and data to file: %s\n",outfiles[0]);
 	////////Code below is taken from //////////////Taken from https://en.wikibooks.org/wiki/MINC/Tutorials/Programming05 //////
 
 	/* set the slice scaling */
-	miset_slice_range(label_volume, start, 3, 1, 0);
+	miset_slice_range(label_volume, start, 3, 2, 0);
 
 	// put the hyperslab into the new volume
 	if (miset_real_value_hyperslab(label_volume, MI_TYPE_DOUBLE,
