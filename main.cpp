@@ -36,22 +36,7 @@ double        world_location[3], step, xSvox, xEvox, ySvox, yEvox, slope, dvoxel
 unsigned long voxel_location[3];
 map< int,vector< vector<double> > > contours;
 
-// linear interpolate x in an array
-// inline
-float interp1( double x, double a[], int n )
-{
- if( x <= 0 )  return a[0];
- if( x >= n - 1 )  return a[n-1];
- int j = int(x);
- return a[j] + (x - j) * (a[j+1] - a[j]);
-}
-// linear interpolate array a[] -> array b[]
-void inter1parray( double a[], int n, double b[], int m ){
- double step = double( n - 1 ) / (m - 1);
- for( int j = 0; j < m; j ++ ){
-		b[j] = interp1( j*step, a, n );
- }
-}
+
 
 /*Main start */
 int main(int argc, char **argv)
