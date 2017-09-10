@@ -1,7 +1,0 @@
-/home/pet/Desktop/Ubuntu-Reformat/rtx2mnc/build/CMakeFiles/rebuild_cache.dir
-/home/pet/Desktop/Ubuntu-Reformat/rtx2mnc/build/CMakeFiles/install.dir
-/home/pet/Desktop/Ubuntu-Reformat/rtx2mnc/build/CMakeFiles/list_install_components.dir
-/home/pet/Desktop/Ubuntu-Reformat/rtx2mnc/build/CMakeFiles/rtx2mnc.dir
-/home/pet/Desktop/Ubuntu-Reformat/rtx2mnc/build/CMakeFiles/install/strip.dir
-/home/pet/Desktop/Ubuntu-Reformat/rtx2mnc/build/CMakeFiles/install/local.dir
-/home/pet/Desktop/Ubuntu-Reformat/rtx2mnc/build/CMakeFiles/edit_cache.dir
