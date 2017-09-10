@@ -72,96 +72,100 @@ int main(int argc, char **argv)
   	if (fileformat.loadFile(infiles[1]).good()){
   		// Load the DICOM-RT dataset
   		DcmDataset *dataset = fileformat.getDataset();
-  		// Find the ROIContourSequence tag
-  		DcmSequenceOfItems *pROIContourSequnce = NULL;
-  		if(dataset->findAndGetSequence(DCM_ROIContourSequence, pROIContourSequnce, true).good()){
-  			// Assuming only 1 - get it.
-  			DcmDataset *ROIContourSequence = (DcmDataset *) pROIContourSequnce->getItem(0);
-  			// Find the ContourSequence tags
-  			DcmSequenceOfItems *pContourSequnce = NULL;
-  			if(ROIContourSequence->findAndGetSequence(DCM_ContourSequence, pContourSequnce, true).good()){
-  				// Get the number of contour sequences in the file
-  				Uint16 numimages = pContourSequnce->card();
-					//Print number of contour sequences in the file
-  				fprintf(stderr, "\tFound %d contour data entries in the RTx file.\n",numimages);
-					//For each contour data entry do the following:
-  				for( iter=0; iter<numimages; iter++){
+  		// Find the StructureSetRoiSequence and place the sequence into NumofRoi
+  		DcmSequenceOfItems *NumofRoi = NULL;
+			if(dataset->findAndGetSequence(DCM_StructureSetROISequence, NumofRoi, true).good()){
+				//Extract the value placed in the sequence tag as an integer
+				Uint16 numroi = NumofRoi->card();
+  			// Find the ROIContourSequence tag
+				DcmSequenceOfItems *pROIContourSequnce = NULL;
+				if(dataset->findAndGetSequence(DCM_ROIContourSequence, pROIContourSequnce, true).good()){
+					int count = 0;
+					//iterate over the number of rois
+					for (size_t i = 0; i < numroi; i++) {
+						DcmDataset *ROIContourSequence = (DcmDataset *) pROIContourSequnce->getItem(i);
+						// Find the ContourSequence tags
+						DcmSequenceOfItems *pContourSequnce = NULL;
+						if(ROIContourSequence->findAndGetSequence(DCM_ContourSequence, pContourSequnce, true).good()){
+							//http://forum.dcmtk.org/viewtopic.php?t=2269
+							// Get the number of contour sequences in the current ROI
+							Uint16 numimages = pContourSequnce->card();
+							//Print number of contour sequences in the file
+							fprintf(stderr, "\tFound %d contour data entries in the RTx file.\n",numimages);
+							//For each contour data entry do the following:
 
-  					// Get each ContourSequence at a time
-  					DcmItem *ContourSequence = pContourSequnce->getItem(iter);
+							for( iter=0; iter<numimages; iter++){
+								count = count + 1;
+								// Get each ContourSequence at a time
+								DcmItem *ContourSequence = pContourSequnce->getItem(iter);
 
-  					// For future reference, get the contour Number and number of points in sequence
+								//Define char pointer
+								const char *number = NULL;
+								//Tag DCM_ContourNumber(3006, 0048)
+								ContourSequence->findAndGetString(DCM_ContourNumber, number, 4);
+								//Turn into string
+								string s_number(number);
+								//Define char pointer
+								const char *npoints = NULL;
+								//Tag DCM_NumberOfContourPoints(3006, 0046)
+								ContourSequence->findAndGetString(DCM_NumberOfContourPoints, npoints, 4);
+								//Turn into string
+								string s_npoints(npoints);
+								//	printf("number of contour points %s\n", npoints);
+								// Get the contour data points in the form
+								vector< vector<double> > xyz_coordinates;
+								//Define char pointer
+								const char *cdata = NULL;
+								//Tag DCM_ContourData (3006,0050)
+								ContourSequence->findAndGetString(DCM_ContourData, cdata, 4);
+								string s_cdata(cdata);
+								// Extract each combination of x,y,z coordinates and insert them in map
+								size_t pos = 0;
+								string token;
+								string delimiter = "\\";
+								coordinate_counter = 0;
+								xyz_counter = 0;
+								while((pos = s_cdata.find(delimiter)) != string::npos){
+									//http://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
+									token = s_cdata.substr(0,pos);
+									// If 0, we are at x again, add new coordinate point to vector
+									if(xyz_counter == 0){
+										vector<double> new_point(1,3);
+										xyz_coordinates.push_back(new_point);
+									}
 
-						//Define char pointer
-  					const char *number = NULL;
-						//Tag DCM_ContourNumber(3006, 0048)
-  					ContourSequence->findAndGetString(DCM_ContourNumber, number, 4);
-						//Turn into string
-  					string s_number(number);
-						//Define char pointer
-  					const char *npoints = NULL;
-						//Tag DCM_NumberOfContourPoints(3006, 0046)
-  					ContourSequence->findAndGetString(DCM_NumberOfContourPoints, npoints, 4);
-						//Turn into string
-  					string s_npoints(npoints);
-						//	printf("number of contour points %s\n", npoints);
-  					// Get the contour data points in the form
-  					vector< vector<double> > xyz_coordinates;
-						//Define char pointer
-						const char *cdata = NULL;
-						//Tag DCM_ContourData (3006,0050)
-  					ContourSequence->findAndGetString(DCM_ContourData, cdata, 4);
-  					string s_cdata(cdata);
-  					// Extract each combination of x,y,z coordinates and insert them in map
-  					size_t pos = 0;
-  					string token;
-  					string delimiter = "\\";
-  					coordinate_counter = 0;
-						xyz_counter = 0;
-  					while((pos = s_cdata.find(delimiter)) != string::npos){
-							//http://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
-  						token = s_cdata.substr(0,pos);
-  						// If 0, we are at x again, add new coordinate point to vector
-  						if(xyz_counter == 0){
-  							vector<double> new_point(1,3);
-  							xyz_coordinates.push_back(new_point);
-  						}
+									// Add coordinate point (x, y or z) to vector
+									xyz_coordinates[coordinate_counter].push_back(atof(token.c_str()));
 
-  						// Add coordinate point (x, y or z) to vector
-  						xyz_coordinates[coordinate_counter].push_back(atof(token.c_str()));
+									// If 3, we have added z, reset to x for next iteration
+									if(xyz_counter+1 == 3){
+										xyz_counter = 0;
+										coordinate_counter += 1;
+									} else {
+										xyz_counter += 1;
+									}
 
-  						// If 3, we have added z, reset to x for next iteration
-  						if(xyz_counter+1 == 3){
-  							xyz_counter = 0;
-  							coordinate_counter += 1;
-  						} else {
-  							xyz_counter += 1;
-  						}
+									s_cdata.erase(0,pos+delimiter.length());
 
-  						s_cdata.erase(0,pos+delimiter.length());
+								}
+								// Add final z that is left in the sequence
+								xyz_coordinates[coordinate_counter].push_back(atof(s_cdata.c_str()));
+								// Add all points from contour to map of contours
+								contours.insert( pair< int,vector< vector<double> > >(count ,xyz_coordinates));
+						}
 
-  					}
-  					// Add final z that is left in the sequence
-  					xyz_coordinates[coordinate_counter].push_back(atof(s_cdata.c_str()));
+					}
 
-
-  					// Add all points from contour to map of contours
-  					contours.insert( pair< int,vector< vector<double> > >(iter,xyz_coordinates));
-  				}
-
-  			}
-
-  		}
-
-  	}
+				}
+			}
+		}
+	}
 
 	/* Load the MINC container file from which we will obtain
 	 * information such as voxel size and image dimensions.
 	 *
 	 * We can only work with minc 2.0 files */
-
-  fprintf(stderr, "Loading PET file: %s\n",infiles[0]);
-
+  fprintf(stderr, "Loading PET/MR/CT file: %s\n",infiles[0]);
 	system("mkdir /tmp/minc_plugins/");
 	std::string in1 = "mincconvert -clobber ";
 	in1 += infiles[0];
@@ -188,7 +192,6 @@ int main(int argc, char **argv)
 		counter[i] = (unsigned long) sizes[i];
 		micopy_dimension(dimensions[i], &dimensions_new[i]);
 	}
-
 
 	fprintf(stderr, "\tDimensions of PET file: %dx%dx%d\n",sizes[0],sizes[1],sizes[2]);
 
@@ -259,6 +262,7 @@ int main(int argc, char **argv)
 			contour_voxel = sizes[2]*voxel_location[1] + voxel_location[2];
 			// Set new label value to 1
 			tmpSlice[contour_voxel] = 1.0;
+
 		 }
       /* ----------------- Interpolation ----------------- */
      //Chose a step size that you want to increase x with.
@@ -385,32 +389,59 @@ int main(int argc, char **argv)
  		  	}
 
 		}
+
 		//We wanna make sure that we plus with 1 inside the contour,
 		//this way we make sure that when we insert another smaller contour inside the big contour
 		//the value gets set to 2.0 inside the small contour such that when we modulo we set that value to 0
-
+	//
 	for(i = 0; i < sizes[1]*sizes[2]; i++){
 		if(tmpSlice[i] < NewColour){
-			slab[first_voxel_at_slice + i] += 1.0;
+			if(i+first_voxel_at_slice > 0 && sizes[0]*sizes[1]*sizes[2] > first_voxel_at_slice+i){
+				slab[first_voxel_at_slice + i] += 1.0;
+			}
+			else{
+				fprintf(stderr, "Dimension Error: Trying to write to slice %lu, but the max slice number is %i \n Check the dimensions of your input minc file and your RT file \n", voxel_location[0], sizes[0]);
+				exit (EXIT_FAILURE);
+			}
 		}
 	}
-
 	for(i = 0; i < sizes[1]*sizes[2]; i++){
 		if(tmpSlice[i] == 1){
 			slab[first_voxel_at_slice + i] += 1.0;
 		}
 	}
-
-
+	// for(i = 0; i < sizes[1]*sizes[2]; i++){
+	// 	if(tmpSlice[i] < NewColour){
+	// 		slab[first_voxel_at_slice + i] += 3;
+	// 	}
+	// }
 
 }//End contour loop
-/*We modulo so we can remove all the two's and this removes everything outside of the contour and
-everything inside the contour such as smaller contours*/
-for (i=0; i < sizes[0] * sizes[1] * sizes[2]; i++) {
- slab[i] = ((fmod(slab[i], 2.0) == 0.0) ? 0.0 : 1.0);
-}
-
-	fprintf(stderr, "Writing volume and data to file: %s\n",outfiles[0]);
+	/*We modulo so we can remove all the two's and this removes everything outside of the contour and
+	everything inside the contour such as smaller contours*/
+	for (i=0; i < sizes[0] * sizes[1] * sizes[2]; i++) {
+	 slab[i] = ((fmod(slab[i], 2.0) == 0.0) ? 0.0 : 1.0);
+	}
+	int colvox = 0;
+	for (i=0; i < sizes[0] * sizes[1] * sizes[2]; i++) {
+	 	if(slab[i] == 1){
+		 	colvox++;
+	 }
+	}
+	int sliceColCounter = 0;
+	int rest = 0;
+	for (i=0; i < sizes[0]; i++) {
+		for (int u = 0; u < sizes[1] * sizes[2]; u++) {
+			if (slab[rest+u] == 1){
+				sliceColCounter++;
+				break;
+			}
+		}
+		rest = sizes[1] * sizes[2] * i;
+	}
+	fprintf(stderr, "\n%i Voxels was colored during the process\n", colvox);
+	fprintf(stderr, "%i Slices was colored during the process\n", sliceColCounter);
+	fprintf(stderr, "\nWriting volume and data to file: %s\n",outfiles[0]);
 	////////Code below is taken from //////////////Taken from https://en.wikibooks.org/wiki/MINC/Tutorials/Programming05 //////
 
 	/* set the slice scaling */
@@ -439,7 +470,7 @@ for (i=0; i < sizes[0] * sizes[1] * sizes[2]; i++) {
 
 	system("rm -rf /tmp/minc_plugins/");
 
-	fprintf(stderr, "Finished rtx2mnc\n");
+	fprintf(stderr, "Finished rtx2mnc\n\n");
 
 	return(0);
 }
