@@ -1,0 +1,117 @@
+#############################################################################################################
+##### Rigshospitalet - Department of Clinical Physiology and Nuclear Medicine PET- and Cyclotron unit   #####
+##### Author: Joachim Hansen                                                                            #####
+##### Mail: Joachim.Pries.Hansen@regionh.dk                                                             #####
+##### Phone: +45 60632283                                                                               #####
+##### Supervisor: Flemming Littrup Andersen                                                             #####
+#############################################################################################################
+
+
+
+The files in this folder have as of now 3 purposes. 13 Nov. 2017 (updated 19th Jan. 2018)
+
+I will describe the individual python program further down, but for now i will describe it more generally.
+The first purpose is to take 4 directories of different files.
+0. 			-- Inputs should be of type dir/dir/     contains files.dcm
+1. -defon  		-- is often of type MR
+2. -yaxis		-- is often of type ADC
+3. -xaxis		-- is often of type PET
+4. -rt			-- if often of type RT struct
+5. -re			-- Describes the directory of files we want to resample as
+6. -out			-- Name of output directory or path everything will be placed in
+7. ---totalscatter	-- (Optional)a flag with no input, creates one big scatterplot(y=adc, x=pet(suv)) with all the files
+8. ---xdim		-- (Optional)Length of x axis on scatterplots default = 35
+9. ---title		-- (Optional)Title placed in the top of the scatterplot default = Scatterplots
+
+Example of use:
+python main.py  -defon FDG/MR/ -yaxis FDG_ADC/dir_with_dcmfiles/ -xaxis FDG_PET/dir_with_dcmfiles/ -rt FDG_RT/dir_with_1rtfile/ -re FDG_MR/dir_with_dcmfiles/ ---xdim 35 ---title FDG_b200-1000_20-30min -o FDG_ADC_FUGUE_b200 ---totalscatter
+
+
+Given these files the program work in the following order:
+1. Create directory named MNCfiles where the program will run 
+2. Convert all DICOM files to .mnc format in respected folders: defmnc, yaxis, xaxis, rt, resampledas, they are named using date_time format of the MR scan.
+3. Using date_time we rename all the defmnc files as the studyuidrt
+4. copy all rt files into MNCfiles in folder rt
+5. Run rtx2mnc on the rt files and defmnc files using studyuidrt name on defmnc files we only convert files that actually match. Output is in RTOut
+6. Rename all RTOut files as patientID
+7. Resample all files as target of -re flag output is in Resampled_xaxis, Resampled_yaxis and so on. 
+8. Now we convert the Resampled files into nifti format. Output is in nifti_xaxis, nifti_yaxis and so on
+9. Calculates the SUV value for every xaxis file and put into a list. 
+10. Calls the R script with the nifti files as input. Apply the niftirtmask, divide the cells by the SUV value, and plot as scatterplot yaxis adc, xaxis pet output as pdf in ScatterPlots_PDF
+
+
+The second purpose is divided in two options single target and directory target.
+
+Single:			-- Inputs should be of type dir/     contains files.dcm, or .mnc files
+1. --mr 		-- (Optional)is often of type MR
+2. --rts		-- is often of type RT struct
+3. --pet		-- is often of type PET, could be CT
+
+IMPORTANT: When only --pet --rts is given then --pet is the file RT is being sampled to. so if only --pet is given then rt is defined on --pet
+	   When both --mr --pet --rts is given --mr is the file RT is being sampled to. So if --mr is given then rt is defined on --mr
+
+Directory:		--auto has to be before any other argument!
+0. --auto		-- Inputs should be of type dir/dir/     contains files.dcm
+1. --mr 		-- is often of type MR
+2. --rts		-- is often of type RT struct
+3. --pet		-- (Optional)is often of type PET, could be CT
+
+For both options the following happends:
+1. Converts dicom files to minc format
+2. Uses rtx2mnc on files and converts RT into mnc files
+3. Resamples files as mr input, output is placed in MNCfiles/Resampled  
+
+The third purpose is to combine png files.
+The call will combine min 2 and max 4 png files on the same page e.g 
+
+	png2 png3
+	png1 png4
+
+Example of use:
+python main.py -p2 dir_with_pngfiles/ -p3 dir_with_pngfiles/ -p1 dir_with_pngfiles/ -p4 dir_with_pngfiles/ -pout outputdirectory
+
+Python files:
+-------------------------------main.py-------------------------------
+
+Create the parser and arguments first, then given certain arguments call the other python files doing what we want with the specific arguments. 
+Before calling other files we check if the arguments exists. 
+
+-------------------------------functions.py-------------------------------
+
+Contains various functions used in the different processes, the functions are placed in sections, to easily see which functions is used in which files. 
+
+-------------------------------Pipe_rtx2mnc.py-------------------------------
+
+First we check if RT is dicom, and then we get the Studyuid, and seriesinstanceuid, to compare if files match later on. 
+
+Then there is case handling for all the different cases of input e.g 
+mr.mnc dir/pet.dcm rt, 
+or 
+dir/mr.dcm/ dir/pet.dcm rt,
+The handling is done using .endswith(.mnc) so not so robust but sufficient for now
+
+When entering a case, we verify if the files match(definedon vs rt), and have a case for the flag -revres so if we would normally resample the pet as the rt, we would now resample the rt as the pet
+
+Its also here we use fetchstudyuid_dirscp and verifymincfile_dirscp from the functions file, here we also force use the RT file given the flag --forcert.
+
+-------------------------------Plot_ADC_SUV.py-------------------------------
+
+Basically calls functions and scripts doing what is described in the 10 points in the 'first purpose' stated in the beginning of this file
+
+-------------------------------UsePipe_rtx2mncOnDirectories.py-------------------------------
+
+Main purpose is to create 3 different cases, first we handle input for --auto argument and 3 inputs, then if only 2 arguments and --auto given, then if no --auto given.
+
+Every one of these cases results in calling Pipe_rtx2mnc with the corresponding arguments. 
+But before this happends we call handleinput_dirscp that has additional error handling.
+We also check using output from handleinput_dirscp that we only call the pipe_rtx2mnc script given that the files match(pet/mr -- rt)
+
+-------------------------------import.R-------------------------------
+
+The import.R file takes 4 arguments, --adc(-a), --pet(-p), --rt(-r), --constant(-d)
+First we check if the input exists, then we import the data into variables, pet, adc, rt
+Now we multiply the rt mask onto the pet, and load this into the petmask variable
+Then we multiply the rt mask onto the adc, and divide every number with the constant given, and loads into variable adcmask
+Now convert the two into matrix format, and set all (0,0) coordinates as NA so we don't plot e.g 3 million (0,0) points.
+Now plot as scatterplot. 
+
