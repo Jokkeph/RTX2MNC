@@ -1,8 +1,8 @@
 # FindMINC.cmake module
 
 
-FIND_PATH(MINC_INCLUDE_DIR minc2.h /opt/minc/include /usr/include /usr/local/include /usr/local/bic/include)
-FIND_LIBRARY(MINC_minc2_LIBRARY NAMES minc2 HINTS /opt/minc/lib /usr/lib /usr/local/lib /usr/local/bic/lib)
+FIND_PATH(MINC_INCLUDE_DIR minc2.h /opt/minc/include /usr/include /usr/local/include /usr/local/bic/include /opt/minc/1.9.15/include /opt/minc/1.9.15)
+FIND_LIBRARY(MINC_minc2_LIBRARY NAMES minc2 HINTS /opt/minc/lib /usr/lib /usr/local/lib /usr/local/bic/lib /opt/minc/1.9.15 /opt/minc/1.9.15/lib)
 
 
 IF (MINC_INCLUDE_DIR AND MINC_minc2_LIBRARY)

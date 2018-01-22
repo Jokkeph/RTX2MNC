@@ -14,6 +14,7 @@
 #include <ParseArgv.h>
 #include <queue>
 #include <typeinfo>
+#include <time.h>
 
 #include "dcmtk/dcmdata/dctk.h"
 #include "dcmtk/dcmimgle/dcmimage.h"
@@ -65,8 +66,7 @@ int main(int argc, char **argv)
 	*/
 
 	fprintf(stderr, "Loading RTx file: %s\n",infiles[1]);
-
-
+	clock_t tStart = clock();
 	DcmFileFormat fileformat;
 	//http://support.dcmtk.org/redmine/projects/dcmtk/wiki/Howto_GetSequenceItem
   	if (fileformat.loadFile(infiles[1]).good()){
@@ -103,6 +103,7 @@ int main(int argc, char **argv)
 								const char *number = NULL;
 								//Tag DCM_ContourNumber(3006, 0048)
 								ContourSequence->findAndGetString(DCM_ContourNumber, number, 4);
+
 								//Turn into string
 								string s_number(number);
 								//Define char pointer
@@ -111,7 +112,7 @@ int main(int argc, char **argv)
 								ContourSequence->findAndGetString(DCM_NumberOfContourPoints, npoints, 4);
 								//Turn into string
 								string s_npoints(npoints);
-								//	printf("number of contour points %s\n", npoints);
+								printf("number of contour points %s\n", npoints);
 								// Get the contour data points in the form
 								vector< vector<double> > xyz_coordinates;
 								//Define char pointer
@@ -136,7 +137,6 @@ int main(int argc, char **argv)
 
 									// Add coordinate point (x, y or z) to vector
 									xyz_coordinates[coordinate_counter].push_back(atof(token.c_str()));
-
 									// If 3, we have added z, reset to x for next iteration
 									if(xyz_counter+1 == 3){
 										xyz_counter = 0;
@@ -193,6 +193,7 @@ int main(int argc, char **argv)
 		micopy_dimension(dimensions[i], &dimensions_new[i]);
 	}
 
+
 	fprintf(stderr, "\tDimensions of PET file: %dx%dx%d\n",sizes[0],sizes[1],sizes[2]);
 
 	/* create the new volume */
@@ -225,10 +226,9 @@ int main(int argc, char **argv)
 		slab[i] = 0.0;
 
 	}
-
-
 	/* Loop through the RT struct map, set new label to 1 for every pixel on the contours */
 	map< int , vector < vector<double> > >::iterator it = contours.begin();
+	//For loop that iterates the number of contours, creates vector of x, y coordinates
   	for(it=contours.begin(); it!= contours.end(); ++it){
   		vector< vector<double> > contour = it->second;
 			std::vector< double > arrX;
@@ -240,6 +240,7 @@ int main(int argc, char **argv)
 			for (i=0; i < sizes[1] * sizes[2]; i++){
 				tmpSlice[i] = 0.0;
 			}
+
 	  for(cord_i = 0; cord_i < contour.size(); ++cord_i){
 			// Convert to voxel coordinate
 			world_location[0] = -contour[cord_i][1];
@@ -256,11 +257,15 @@ int main(int argc, char **argv)
 
 			// Calculate the position in the hyperslab
 			first_voxel_at_slice = sizes[1]*sizes[2]*voxel_location[0];
+			//Push elements onto arrays for interpolation section
 			arrX.push_back(voxel_location[1]);
 			arrY.push_back(voxel_location[2]);
-
 			contour_voxel = sizes[2]*voxel_location[1] + voxel_location[2];
+
+
+
 			// Set new label value to 1
+
 			tmpSlice[contour_voxel] = 1.0;
 
 		 }
@@ -268,6 +273,7 @@ int main(int argc, char **argv)
      //Chose a step size that you want to increase x with.
      step = 0.0001;
      //Iterate over all the coordinates one at a time
+		 	/* code */
      for(i = 0; i < arrX.size()-1; ++i){
        //Create variables for x1,y1,x2,y2
        xSvox = arrX[i];
@@ -322,6 +328,7 @@ int main(int argc, char **argv)
        }
 		 }
 
+		//
 		 /* ----------------- Flood fill ----------------- */
 		 //Colour we are looking for as background
 		 TargetColour = 0.0;
@@ -331,9 +338,21 @@ int main(int argc, char **argv)
 		 set < int > Set;
 		 //Create queue
 		 queue < int > MyQue;
-		 //Insert first point into the queue
-		 MyQue.push(1);
 		 //While loop for iterating over the nodes.
+		// // int speed = 0;
+		// // for (int i = 0; i < sizes[2]*sizes[1]; i++) {
+		// // 	if (tmpSlice[i+1] == 1.0){
+		// // 		speed = i;
+		// // 		break;
+		// // 	}
+		// // 	else{
+		// // 		tmpSlice[i] = 2.0;
+		// // 	}
+		//
+		// //}
+		//Insert first point into the queue
+		MyQue.push(0);
+
 		 while (!MyQue.empty()){
 		//Set front element to Node, and pop the front element from queue
 			 Node = MyQue.front();
@@ -341,27 +360,24 @@ int main(int argc, char **argv)
 			 //Change the colour to newcolour
 			 tmpSlice[Node] = NewColour;
 			 //Define the Node directions
-			 WestNode = Node-1;
-			 EastNode = Node+1;
-
-
+			 WestNode = Node+1;
+			 EastNode = Node-1;
 			 //sizes are the lengths x,y
-			 NorthNode = Node-sizes[1];
+			 NorthNode = Node-sizes[2];
 			 SouthNode = Node+sizes[2];
-
 		 	 //Boundary checks for 3d only. might be needed in the future
 		 	//  EastNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((EastNode-sizes[1]*sizes[2]*floor(EastNode/(sizes[1]*sizes[2])))/sizes[1]);
 		 	//  SouthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(SouthNode / (sizes[1]*sizes[2]));
 		 	//  WestNodeBoundaryCheck = floor((Node-sizes[1]*sizes[2]*floor(Node/(sizes[1]*sizes[2])))/sizes[1]) == floor((WestNode-sizes[1]*sizes[2]*floor(WestNode/(sizes[1]*sizes[2])))/sizes[1]);
 		 	//  NorthNodeBoundaryCheck = floor(Node / (sizes[1]*sizes[2])) == floor(NorthNode / (sizes[1]*sizes[2]));
 
-
 			 //East Node
 			 if (Set.insert(EastNode).second) {
 			 	if (tmpSlice[EastNode] == TargetColour){
     				MyQue.push(EastNode);
-				 }
-			  }
+				}
+			 }
+
 
 				//South Node
  			 if (Set.insert(SouthNode).second) {
@@ -374,26 +390,29 @@ int main(int argc, char **argv)
 
 			 //West Node
 			 if (Set.insert(WestNode).second) {
-			  if (tmpSlice[WestNode] == TargetColour){
-    				MyQue.push(WestNode);
-			   }
-		  	}
+			  	if (tmpSlice[WestNode] == TargetColour){
+							MyQue.push(WestNode);
+					}
+			 }
+
 
 			 //North Node
 			 if (Set.insert(NorthNode).second) {
 				 if (NorthNode >= 0){
 					 if (tmpSlice[NorthNode] == TargetColour){
+
 							 MyQue.push(NorthNode);
-						 }
+
+						}
 				 }
- 		  	}
+ 		   }
 
 		}
 
 		//We wanna make sure that we plus with 1 inside the contour,
 		//this way we make sure that when we insert another smaller contour inside the big contour
 		//the value gets set to 2.0 inside the small contour such that when we modulo we set that value to 0
-	//
+
 	for(i = 0; i < sizes[1]*sizes[2]; i++){
 		if(tmpSlice[i] < NewColour){
 			if(i+first_voxel_at_slice > 0 && sizes[0]*sizes[1]*sizes[2] > first_voxel_at_slice+i){
@@ -405,18 +424,11 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	for(i = 0; i < sizes[1]*sizes[2]; i++){
-		if(tmpSlice[i] == 1){
-			slab[first_voxel_at_slice + i] += 1.0;
-		}
-	}
-	// for(i = 0; i < sizes[1]*sizes[2]; i++){
-	// 	if(tmpSlice[i] < NewColour){
-	// 		slab[first_voxel_at_slice + i] += 3;
-	// 	}
-	// }
+
+
 
 }//End contour loop
+
 	/*We modulo so we can remove all the two's and this removes everything outside of the contour and
 	everything inside the contour such as smaller contours*/
 	for (i=0; i < sizes[0] * sizes[1] * sizes[2]; i++) {
@@ -424,7 +436,7 @@ int main(int argc, char **argv)
 	}
 	int colvox = 0;
 	for (i=0; i < sizes[0] * sizes[1] * sizes[2]; i++) {
-	 	if(slab[i] == 1){
+	 	if(slab[i] > 0 ){
 		 	colvox++;
 	 }
 	}
@@ -471,6 +483,6 @@ int main(int argc, char **argv)
 	system("rm -rf /tmp/minc_plugins/");
 
 	fprintf(stderr, "Finished rtx2mnc\n\n");
-
+	printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
 	return(0);
 }
