@@ -5,12 +5,19 @@
 ##### Phone: +45 60632283                                                                               #####
 ##### Supervisor: Flemming Littrup Andersen                                                             #####
 #############################################################################################################
+Installation
 
+To install run python install.py or python installMacOS.py.
+In this process you have the choice to install DCMTK and MINC toolkit alongside or choose not to install the libraries
+With DCMTK and MINC toolkit an estimated installation time is 20-40 min. Without DCMTK and MINC toolkit 1 min installation time.
 
 
 The files in this folder have as of now 3 purposes. 13 Nov. 2017 (updated 19th Jan. 2018)
 
-I will describe the individual python program further down, but for now i will describe it more generally.
+I will describe the individual python program further down, but first a more general description.
+
+--------------------------------Scatterplots, Kurtosis, Skewness--------------------------------
+
 The first purpose is to take 4 directories of different files.
 0. 			-- Inputs should be of type dir/dir/     contains files.dcm
 1. -defon  		-- is often of type MR
@@ -28,17 +35,18 @@ python main.py  -defon FDG/MR/ -yaxis FDG_ADC/dir_with_dcmfiles/ -xaxis FDG_PET/
 
 
 Given these files the program work in the following order:
-1. Create directory named MNCfiles where the program will run 
+1. Create directory named MNCfiles where the program will run
 2. Convert all DICOM files to .mnc format in respected folders: defmnc, yaxis, xaxis, rt, resampledas, they are named using date_time format of the MR scan.
 3. Using date_time we rename all the defmnc files as the studyuidrt
 4. copy all rt files into MNCfiles in folder rt
 5. Run rtx2mnc on the rt files and defmnc files using studyuidrt name on defmnc files we only convert files that actually match. Output is in RTOut
 6. Rename all RTOut files as patientID
-7. Resample all files as target of -re flag output is in Resampled_xaxis, Resampled_yaxis and so on. 
+7. Resample all files as target of -re flag output is in Resampled_xaxis, Resampled_yaxis and so on.
 8. Now we convert the Resampled files into nifti format. Output is in nifti_xaxis, nifti_yaxis and so on
-9. Calculates the SUV value for every xaxis file and put into a list. 
+9. Calculates the SUV value for every xaxis file and put into a list.
 10. Calls the R script with the nifti files as input. Apply the niftirtmask, divide the cells by the SUV value, and plot as scatterplot yaxis adc, xaxis pet output as pdf in ScatterPlots_PDF
 
+--------------------------------Convert RT-structs to .mnc format--------------------------------
 
 The second purpose is divided in two options single target and directory target.
 
@@ -59,10 +67,12 @@ Directory:		--auto has to be before any other argument!
 For both options the following happends:
 1. Converts dicom files to minc format
 2. Uses rtx2mnc on files and converts RT into mnc files
-3. Resamples files as mr input, output is placed in MNCfiles/Resampled  
+3. Resamples files as mr input, output is placed in MNCfiles/Resampled
+
+--------------------------------Combine several PNG's to one big PNG--------------------------------
 
 The third purpose is to combine png files.
-The call will combine min 2 and max 4 png files on the same page e.g 
+The call will combine min 2 and max 4 png files on the same page e.g
 
 	png2 png3
 	png1 png4
@@ -70,23 +80,62 @@ The call will combine min 2 and max 4 png files on the same page e.g
 Example of use:
 python main.py -p2 dir_with_pngfiles/ -p3 dir_with_pngfiles/ -p1 dir_with_pngfiles/ -p4 dir_with_pngfiles/ -pout outputdirectory
 
+C++ files:
+
+-------------------------------main.cpp The backbone of the other programs-------------------------------
+
+Isolate number of contours in the rt file.
+Iterate over each contour splitting up the long coordinate(xyz) string into a vector<vector<double>>consisting of a tuple(contour_number, xyz coordinates in a vector)
+Load mr/pet image in using miopen_volume save the dimensions xyz size. Allocate an and copy to array of x*y*z size.
+Create new mnc empty volume with the sizes called label_volume.mnc
+Create seperate vectors to x y coordinates, loop through contours using z coordinate.
+Fill a slice/array of size x*y with 0's.
+Calculate the world coordinates from contour coordinates.
+Using world coordinates set the place in tmpSlice equal to 1
+Push x, y onto array for use in interpolation
+We iterate over every single x, y coordinate calculating the slope between (x,y) and (x1,y1) and then (x1,y1) (x2,y2)
+2 cases of (x,y) being left or right of (x1,y1)
+2 cases of x = x1, and the lowest of the two y's y<y1 or y>y1
+We chose a stepsize of 0.0001, we move x 0.0001 to the side and y + ((y-y1) / (x - x1))[euclidean slope] * 0.0001 up or down.
+
+To fill the contour we use flood fill. We push top left corner of a slice onto a stack.
+Then we color this voxel equal to 2.0 we check the nodes to the left, right, below, above if they are equal to 0 we push them onto the stack.
+Now our slab could look like:
+22222222222222222222222222222
+22222222222222111222222222222
+22222111111111000111222222222
+22221000000000000001222222222
+22221000000000000000122222222
+22221000000000000001222222222
+22222100000000000012222222222
+22222111111111111122222222222
+22222222222222222222222222222
+Now everything below 2 gets incremented by 1 removing the edge(we got extra edges from interpolation)
+For every contour there is a picture like the one above. If there is a hole this is also a contour
+Finally we plus all the contours together on one slice.
+If two contours lie on top of each other its a hole and the incrementation will result in a value dividable by two.
+Finally we modulo the entire slice with 2 leaving only stuff not dividable by two left.
+This is drawn on the slab in the earlier created minc label_volume.
+The 'hyperslab' is saved to the volume and converted back to minc 1 from minc2(converted to minc2 earlier)
+
+
 Python files:
 -------------------------------main.py-------------------------------
 
-Create the parser and arguments first, then given certain arguments call the other python files doing what we want with the specific arguments. 
-Before calling other files we check if the arguments exists. 
+Create the parser and arguments first, then given certain arguments call the other python files doing what we want with the specific arguments.
+Before calling other files we check if the arguments exists.
 
 -------------------------------functions.py-------------------------------
 
-Contains various functions used in the different processes, the functions are placed in sections, to easily see which functions is used in which files. 
+Contains various functions used in the different processes, the functions are placed in sections, to easily see which functions is used in which files.
 
 -------------------------------Pipe_rtx2mnc.py-------------------------------
 
-First we check if RT is dicom, and then we get the Studyuid, and seriesinstanceuid, to compare if files match later on. 
+First we check if RT is dicom, and then we get the Studyuid, and seriesinstanceuid, to compare if files match later on.
 
-Then there is case handling for all the different cases of input e.g 
-mr.mnc dir/pet.dcm rt, 
-or 
+Then there is case handling for all the different cases of input e.g
+mr.mnc dir/pet.dcm rt,
+or
 dir/mr.dcm/ dir/pet.dcm rt,
 The handling is done using .endswith(.mnc) so not so robust but sufficient for now
 
@@ -102,16 +151,52 @@ Basically calls functions and scripts doing what is described in the 10 points i
 
 Main purpose is to create 3 different cases, first we handle input for --auto argument and 3 inputs, then if only 2 arguments and --auto given, then if no --auto given.
 
-Every one of these cases results in calling Pipe_rtx2mnc with the corresponding arguments. 
+Every one of these cases results in calling Pipe_rtx2mnc with the corresponding arguments.
 But before this happends we call handleinput_dirscp that has additional error handling.
 We also check using output from handleinput_dirscp that we only call the pipe_rtx2mnc script given that the files match(pet/mr -- rt)
 
 -------------------------------import.R-------------------------------
 
 The import.R file takes 4 arguments, --adc(-a), --pet(-p), --rt(-r), --constant(-d)
+
 First we check if the input exists, then we import the data into variables, pet, adc, rt
 Now we multiply the rt mask onto the pet, and load this into the petmask variable
 Then we multiply the rt mask onto the adc, and divide every number with the constant given, and loads into variable adcmask
 Now convert the two into matrix format, and set all (0,0) coordinates as NA so we don't plot e.g 3 million (0,0) points.
-Now plot as scatterplot. 
+Now plot as scatterplot.
 
+-------------------------------functions.R-------------------------------
+
+The import.R file takes 4 arguments, --cpr(-c), --pet(-p), --rt(-r), --name(-n)
+
+Convert pet and rt to img_data format.
+Apply the rt mask onto the pet data, convert to matrix, remove all 0's in the img_data.
+Specify a decimal ammount to 14, and use the functions kurtosis() and skewness()
+Format the results and append to the file specified by --name.
+
+-------------------------------jointHisto-------------------------------
+
+The jointHisto.R file takes 7 arguments, --pet(-p), --adc(-a), --rt(-r), --constant(-d) --xaxis(-x) --title(t) --out(-o)
+
+Split the --constant up into seperate SUV values.
+Assign all scans from --pet --adc --rt to values and convert them to img_data format
+Apply the masks(rt) on the adc data. Convert adc data to matrix format.
+Calculate petdata by formula: ((pet*rt) / suv )*1000.
+Create colorpalette for plot create output file JointHistogram200bins.png as linear
+Do the same but as logarithmic instead JointHistogram200bins_logscale.png.
+
+-------------------------------bigscatterplot.R-------------------------------
+
+The bigscatterplot.R file takes 7 arguments, --pet(-p), --adc(-a), --rt(-r), --constant(-d) --xaxis(-x) --title(t) --out(-o)
+
+-------Copied from above:--------
+Split the --constant up into seperate SUV values.
+Assign all scans from --pet --adc --rt to values and convert them to img_data format
+Apply the masks(rt) on the adc data. Convert adc data to matrix format.
+Calculate petdata by formula: ((pet*rt) / suv )*1000.
+
+------ New ------
+
+Calculate Pearson R using cor() function
+Plot the first dataset, then append every other dataset to the first. Draw a linear regression using lm() function
+Add legends and save as --out
