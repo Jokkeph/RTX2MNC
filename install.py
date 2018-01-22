@@ -1,7 +1,7 @@
 import os
 
 # with is like your try .. finally block in this case
-with open('main.py', 'r') as file:
+with open('Functions/main.py', 'r') as file:
     # read a list of lines into data
     data = file.readlines()
 
@@ -17,3 +17,7 @@ with open('/usr/local/bin/universal', 'w') as file:
     file.writelines( data )
 
 os.system("chmod +x /usr/local/bin/universal")
+
+os.system("mkdir build && cd build")
+os.system("cmake ..")
+os.system("make && sudo make install")
