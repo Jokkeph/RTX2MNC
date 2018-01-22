@@ -19,5 +19,6 @@ with open('/usr/local/bin/universal', 'w') as file:
 os.system("chmod +x /usr/local/bin/universal")
 
 os.system("mkdir build && cd build")
+os.chdir("rtx2mnc/build")
 os.system("cmake ..")
 os.system("make && sudo make install")
