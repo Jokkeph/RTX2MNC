@@ -1,0 +1,4 @@
+#!/usr/bin/python
+import sys, os
+
+os.system("./users/joachim/Desktop/tmpdir/main.py")

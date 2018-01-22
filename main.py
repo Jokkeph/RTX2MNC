@@ -1,8 +1,8 @@
+#!/usr/bin/python
 # coding=utf-8
 import textwrap
 import sys, os, shutil, dicom, magic, argparse, commands, time
-cwd = os.getcwd()
-sys.path.insert(0, cwd + "/" + "Functions")
+
 import functions as f
 import Plot_ADC_SUV
 import UsePipe_rtx2mncOnDirectories
