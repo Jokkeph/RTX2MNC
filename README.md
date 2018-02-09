@@ -6,9 +6,9 @@ Rigshospitalet - Klinik for Klinisk Fysiologi og Nuklearmedicin PET- og Cyklotro
 
 # rtxtool
 
-Can convert RT structures from MIRADA in dicom format to a filled MINC label.__
-Can take directories of DICOM files aswell as single files as input.__
-Can also combine PNG files and create ADC(y), PET(x) point/histogram plots for directories of dicom files.__
+Can convert RT structures from MIRADA in dicom format to a filled MINC label.<br />
+Can take directories of DICOM files aswell as single files as input.<br />
+Can also combine PNG files and create ADC(y), PET(x) point/histogram plots for directories of dicom files.<br />
 
 #
 
@@ -26,7 +26,7 @@ rtxtool < flags > < DICOM file > < RT file >
 </code></pre>
 
 
-##Flags(see --help for details):
+## Flags(see --help for details):
 <pre><code>
 -h, --help       show this help message and exit
 -defon DEFON     Directory of directories containing dicom files, must be
