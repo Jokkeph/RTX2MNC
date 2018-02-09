@@ -9,6 +9,7 @@ Rigshospitalet - Klinik for Klinisk Fysiologi og Nuklearmedicin PET- og Cyklotro
 Can convert RT structures from MIRADA in dicom format to a filled MINC label.<br />
 Can take directories of DICOM files aswell as single files as input.<br />
 Can also combine PNG files and create ADC(y), PET(x) point/histogram plots for directories of dicom files.<br />
+In the Functions directory is an description of the workings of program and choices that i made that could be made otherwise
 
 #
 
