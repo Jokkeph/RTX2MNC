@@ -78,7 +78,7 @@ def main(argPET, argRT, argRevRes, argmr, argForceRT, argprint):
         #Case of mr being mnc and pet being dir
         #
         elif os.path.isdir(argPET) and argmr.endswith('.mnc'):
-            outtmp = f.verifymincfile_dirscp(argmr, StudyUIDRT, RT, argRT, SeriesInsUID, argprint)
+            outtmp = f.verifymincfile_dirscp(argmr, StudyUIDRT, RT, argRT, SeriesInsUID, argprint, argForceRT)
 
             tmp, DateTime = f.fetchStudyID_dirscp(argPET, StudyUIDRT, SeriesInsUID, argForceRT, True)
 
@@ -94,7 +94,7 @@ def main(argPET, argRT, argRevRes, argmr, argForceRT, argprint):
 
         #Case of both input files being mnc already
         elif argPET.endswith('.mnc') and argmr.endswith('.mnc'):
-            outtmp = f.verifymincfile_dirscp(argmr, StudyUIDRT, RT, argRT, SeriesInsUID, argprint)
+            outtmp = f.verifymincfile_dirscp(argmr, StudyUIDRT, RT, argRT, SeriesInsUID, argprint, argForceRT)
 
             if argRevRes == False and f.checkrtx2mnc_dirscp(RT, outtmp) == True:
                #Terminal command mincresample -nearest_neighbour OutRT/20150602_113952.mnc -like PETmnc/20150602_113952.mnc out_resamp.mnc
@@ -127,12 +127,13 @@ def main(argPET, argRT, argRevRes, argmr, argForceRT, argprint):
 
         elif argPET.endswith('.mnc'):
             #Fetch some dicom tags and rename the file to the tmp value.
-            outtmp = f.verifymincfile_dirscp(argPET, StudyUIDRT, RT, argRT, SeriesInsUID, argprint)
+            outtmp = f.verifymincfile_dirscp(argPET, StudyUIDRT, RT, argRT, SeriesInsUID, argprint, argForceRT)
             #Resamples, the flag --RevRes choses which direction it ersamples
+            print "Test", outtmp + ".mnc"
             if argRevRes == False and f.checkrtx2mnc_dirscp(RT,  outtmp) == True:
                 #Terminal command mincresample -nearest_neighbour OutRT/20150602_113952.mnc -like PETmnc/20150602_113952.mnc out_resamp.mnc
                 f.Resample_dirscp(RTOut, RT + "/" + outtmp, argPET + " ", RTOut + "/" + outtmp, argprint)
-            elif f.checkrtx2mnc_dirscp(RT, tmp + ".mnc") == True:
+            elif f.checkrtx2mnc_dirscp(RT, outtmp + ".mnc") == True:
                 f.Resample_dirscp(RTOut, argPET, RT + "/" + outtmp + " ", RTOut + "/" + outtmp, argprint)
         else:
             print "Error: The PET argument is neither a directory nor a .mnc file"

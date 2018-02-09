@@ -193,7 +193,7 @@ def rtx2mnc_dirscp(Directory, definedon, rtfile, outname, argprint):
         subprocess.call("rtx2mnc " + definedon +  " " + rtfile +  " " + Directory +  "/" + outname, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
 #argscan is a mincfile, we check if the mincfiles studyuid matches with the rt file, if the case then run rtx2mnc
-def verifymincfile_dirscp(argmr, StudyUIDRT, out, argRT, SeriesInsUID, argprint):
+def verifymincfile_dirscp(argmr, StudyUIDRT, out, argRT, SeriesInsUID, argprint, argForceRT):
     #get studyuid from the mincfile using grep
     outtmp = str(commands.getstatusoutput('mincheader ' + argmr + ' |grep 000e')[1].split('"')[1::2][0])
     #Create new name for the files
@@ -219,9 +219,14 @@ def verifymincfile_dirscp(argmr, StudyUIDRT, out, argRT, SeriesInsUID, argprint)
 def fetchStudyID_dirscp(fileTocheck, StudyUIDRT, SeriesInsUID, argForceRT, pet):
     #We fetch a single dicom file in order to get the tag to check with RT file later
     for filename in os.listdir(cwd + "/" + fileTocheck):
-        tmp = filename
+        if os.path.isdir(cwd + "/" + fileTocheck + "/" + filename):
+            print "Error: No directories are allowed inside the directory input \n Exiting..."
+            sys.exit()
+        else:
+            tmp = filename
         break
     # If we have MR argument check if the RT file match and turn mr.dcm files into mr.mnc
+
     ds1 = dicom.read_file(fileTocheck + "/" + tmp)
     if "SeriesInstanceUID" in ds1 and ds1[0x0020,0x000e].value == StudyUIDRT:
         DateTime = ds1[0x0008,0x0020].value + "_" + ds1[0x0008,0x0030].value[:-7]

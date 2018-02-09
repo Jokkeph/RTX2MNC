@@ -1,7 +1,7 @@
 /users/joachim/Desktop/tmpdir/rtx2mnc/build/CMakeFiles/install/strip.dir
-/users/joachim/Desktop/tmpdir/rtx2mnc/build/CMakeFiles/install/local.dir
 /users/joachim/Desktop/tmpdir/rtx2mnc/build/CMakeFiles/edit_cache.dir
-/users/joachim/Desktop/tmpdir/rtx2mnc/build/CMakeFiles/rebuild_cache.dir
-/users/joachim/Desktop/tmpdir/rtx2mnc/build/CMakeFiles/install.dir
 /users/joachim/Desktop/tmpdir/rtx2mnc/build/CMakeFiles/rtx2mnc.dir
+/users/joachim/Desktop/tmpdir/rtx2mnc/build/CMakeFiles/rebuild_cache.dir
 /users/joachim/Desktop/tmpdir/rtx2mnc/build/CMakeFiles/list_install_components.dir
+/users/joachim/Desktop/tmpdir/rtx2mnc/build/CMakeFiles/install/local.dir
+/users/joachim/Desktop/tmpdir/rtx2mnc/build/CMakeFiles/install.dir
