@@ -28,8 +28,11 @@ rtxtool < flags > < DICOM file > < RT file >
 
 
 ## Flags(see --help for details):
+The dashes represent the arguments that will work together. Three dashes(---) is optional flags.<br />
+The PNG combining arguments are only to be used together and not with any other arguments except -pout.
 <pre><code>
 -h, --help       show this help message and exit
+
 -defon DEFON     Directory of directories containing dicom files, must be
                  the ones that the RT is defined on or no output
 -yaxis YAXIS     Directory of directories containing dicom files,
@@ -37,6 +40,8 @@ rtxtool < flags > < DICOM file > < RT file >
 -rt RT           The directory containing rt directory/files
 -re RE           The file the other files will be resampled as
 -out OUT         Output directory
+
+
 --revres         Reverses the resample so the PET is resampled as the RT
 --mr MR          Input directory of Dicom files or a single mnc file, the
                  second input file will be resampled upon this file
@@ -44,16 +49,18 @@ rtxtool < flags > < DICOM file > < RT file >
 --forcert        Forces the program to run even though the RT file and input
                  file does not match
 --auto           Allow the input of directories, the scanning files should
-                 be inside a directory etc. dir/dicom/file.dcm and rt file
-                 rt/rtss.dcm
+                 be inside a directory etc. dir/dicom/file.dcm and rt file rt/rtss.dcm
 --rts RTS        Input rt file
+
+
 ---keepmnc       Keeps the intermediary files that are created during
-                 runtime, e.g .nifti, .mnc, resampled.mnc,
-                 beforeresampled.mnc
+                 runtime, e.g .nifti, .mnc, resampled.mnc, beforeresampled.mnc
 ---verbose       Prints additional information of the programs progress
 ---totalscatter  Creates one big scatterplot with all the scans
 ---xdim XDIM     Scatterplot length of xaxis
 ---title TITLE   Title of the scatterplots
+
+
 -p1 P1           Directory containing PNG's
 -p2 P2           Directory containing PNG's
 -p3 P3           Directory containing PNG's
