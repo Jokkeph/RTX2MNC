@@ -22,31 +22,31 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpForm
 parser.description=textwrap.dedent('''\
 ...               First Option
 ...         -----------------------------------------------------------------------------
-...             Supply the required directory arguments below with one dash(-)
+...             Supply the required directory arguments below with two dashes(--)
 ...             running the program that converts 4 directories into mnc files,
-...             then resamples them into the -re argument,
-...             and then creates scatterplots with the -yaxis and -xaxis arguments in R
+...             then resamples them into the --re argument,
+...             and then creates scatterplots with the --yaxis and --xaxis arguments in R
 ...
 ...             Below is an example with all arguments being of type MR/dir/    manyfiles.dcm
-...                python main.py -defon MR/ -rt RT/ -yaxis ADC/ -xaxis PET/ -re MR/
+...                python main.py --defon MR/ --rt RT/ --yaxis ADC/ --xaxis PET/ --re MR/
 ...             Optional flags: "---keepmnc", "---totalscatter", "---xdim", "---title"
 ...              Outputtet in: MNCfiles/
 ...
 ...               Second Option
 ...         -----------------------------------------------------------------------------
-...             Supply the required double dash arguments(--) --mr, --rts
+...             Supply the required single dash arguments(-) -defon, -rts
 ...             The program then returns the rt file as minc and
 ...             resampled as the mr input or the pet input if this was given. "
 ...
 ...             Below is an example with rt being a file, and MR, PET being of type MR/ manyfiles.dcm
-...                 python main.py --mr MR/ --rts rt
-...                 python main.py --mr MR/ --rts rt --pet PET/
+...                 python main.py -defon MR/ -rts rt
+...                 python main.py -mr MR/ -rts rt -snd PET/
 ...             In this example the MR and rt argument is of type MR/dirs/  manyfiles.dcm and rt/dirs/rtfile
 ...             The auto flag allows proccessing alot of files at the same time
-...                 python main --auto --forcert --mr MR/ --rts rt/
+...                 python main -auto -forcert -defon MR/ -rts rt/
 ...
-...             Optional flags: ---keepmnc, --revres, --forcert, --auto
-...              Outputtet in: MNCfiles/Resampled/
+...             Optional flags: ---keepmnc, -revres, -forcert, -auto, -rtout
+...              Outputtet in: MNCfiles/Resampled/ as default
 ...               Third Option
 ...         -----------------------------------------------------------------------------
 ...             Supply the program with calls -p1, -p2, -p3, -p4(only need 2 arguments 4 max) -pout
@@ -55,21 +55,23 @@ parser.description=textwrap.dedent('''\
 ...                 given by -pout
 ...             The arguments should be directory_of_PNG's/
 ''')
-#scatterplots.py
-parser.add_argument("-defon", help="Directory of directories containing dicom files, must be the ones that the RT is defined on or no output")
-parser.add_argument("-yaxis", help="Directory of directories containing dicom files,")
-parser.add_argument("-xaxis", help="Directory of directories containing dicom files,")
-parser.add_argument("-rt", help="The directory containing rt directory/files")
-parser.add_argument("-re", help="The file the other files will be resampled as")
-parser.add_argument("-out", help="Output directory")
-
 #directoryscript.py
-parser.add_argument("--revres", help="Reverses the resample so the PET is resampled as the RT", action="store_true")
-parser.add_argument("--mr", help="Input directory of Dicom files or a single mnc file, the second input file will be resampled upon this file")
-parser.add_argument("--pet", help="Input directory of Dicom files or a single mnc file")
-parser.add_argument("--forcert", help="Forces the program to run even though the RT file and input file does not match", action="store_true")
-parser.add_argument("--auto", help="Allow the input of directories, the scanning files should be inside a directory etc. dir/dicom/file.dcm and rt file rt/rtss.dcm", action="store_true")
-parser.add_argument("--rts", help="Input rt file")
+parser.add_argument("-defon", help="Input directory of Dicom files or a single mnc file")
+parser.add_argument("-snd", help="Input directory of Dicom files or a single mnc file, the second input file will be resampled upon this file")
+parser.add_argument("-rts", help="Input rt file")
+parser.add_argument("-rtout", help="Output directory to put the RT file in. If none given its placed in directory Resampled/")
+parser.add_argument("-forcert", help="Forces the program to run even though the RT file and input file does not match", action="store_true")
+parser.add_argument("-auto", help="Allow the input of directories, the scanning files should be inside a directory etc. dir/dicom/file.dcm and rt file rt/rtss.dcm", action="store_true")
+parser.add_argument("-revres", help="Reverses the resample so the PET is resampled as the RT", action="store_true")
+
+#scatterplots.py
+parser.add_argument("--defon", help="Directory of directories containing dicom files, must be the ones that the RT is defined on or no output")
+parser.add_argument("--yaxis", help="Directory of directories containing dicom files,")
+parser.add_argument("--xaxis", help="Directory of directories containing dicom files,")
+parser.add_argument("--rt", help="The directory containing rt directory/files")
+parser.add_argument("--re", help="The file the other files will be resampled as")
+parser.add_argument("--out", help="Output directory")
+
 #universal
 parser.add_argument("---keepmnc", help="Keeps the intermediary files that are created during runtime, e.g .nifti, .mnc, resampled.mnc, beforeresampled.mnc", action="store_true")
 parser.add_argument("---verbose", help="Prints additional information of the programs progress", action="store_true")
@@ -91,8 +93,8 @@ start_time = time.time()
 #Create lists of the "important arguments" so we can create nicer if statements below
 Scatterplot_Input = [args.rt, args.yaxis, args.xaxis, args.re, args.defon]
 Collected_PNG = [args.p1, args.p2, args.p3, args.p4, args.pout]
-rtx_Single = [args.mr, args.rts]
-rest = [args.revres, args.pet, args.forcert, args.auto, args.keepmnc, args.verbose, args.totalscatter, args.xdim, args.title]
+rtx_Single = [args.snd, args.rts]
+rest = [args.revres, args.defon, args.forcert, args.auto, args.keepmnc, args.verbose, args.totalscatter, args.xdim, args.title]
 
 if(all(Scatterplot_Input) and not(all(Collected_PNG + rtx_Single))):
     #Before doing anything lets be sure the path arguments does actually exist
@@ -113,23 +115,23 @@ if(all(Scatterplot_Input) and not(all(Collected_PNG + rtx_Single))):
     m, s = divmod(time.time() - start_time, 60)
     h, m = divmod(m, 60)
     print("---  Executed in: %d:%02d:%02d  ---" % (h, m, s))
-elif(args.pet or all(rtx_Single) and not(all(Scatterplot_Input + Collected_PNG))):
+elif(args.defon or all(rtx_Single) and not(all(Scatterplot_Input + Collected_PNG))):
     #Before doing anything lets be sure the path arguments does actually exist
 
-    f.checkExists(args.pet)
+    f.checkExists(args.defon)
     f.checkExists(args.rts)
 
 
     #Remove all slashes e.g tmp/folder/ becomes tmp/folder
-    args.pet = f.removeSlash(args.pet)
+    args.defon = f.removeSlash(args.defon)
     args.rt = f.removeSlash(args.rts)
 
 
-    if(args.mr):
-        f.checkExists(args.mr)
-        args.mr = f.removeSlash(args.mr)
+    if(args.snd):
+        f.checkExists(args.snd)
+        args.snd = f.removeSlash(args.snd)
     #Run seperate script
-    UsePipe_rtx2mncOnDirectories.main(args.mr, args.pet, args.rts, args.revres, args.forcert, args.auto, args.keepmnc, args.verbose)
+    UsePipe_rtx2mncOnDirectories.main(args.snd, args.defon, args.rts, args.revres, args.forcert, args.auto, args.keepmnc, args.verbose, args.rtout)
     m, s = divmod(time.time() - start_time, 60)
     h, m = divmod(m, 60)
     print("---  Executed in: %d:%02d:%02d  ---" % (h, m, s))

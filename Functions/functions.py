@@ -138,27 +138,28 @@ def Resample_dirscp(Directory, res, like, out, argprint):
         print "\nLike file: ", like
         print "\nWriting version control into mincheader(current version: 1.8)"
         subprocess.call("mincresample -clobber -nearest_neighbour " + res + " -like " + like + " " + out, shell=True)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.0=Added flood fill algorithm so the contour is now filled'", shell=True)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.1=Added interpolation when drawing the rt contour'", shell=True)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.2=Added support for more than 1 contour'", shell=True)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.3=Added so you can execute directories of severel RT and scanning files at once'", shell=True)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.4=Added version control in the minc header file'", shell=True)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.5=Added a check so the script can now check if the rt matches a mnc file input'", shell=True)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.6=Added more dummy checks and error handling'", shell=True)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.7=Added option to give MR,PET,ADC,RT as input to plot the ADC,SUV values using an R Scatterplot'", shell=True)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.8=Silenced printing to print use ---verbose'", shell=True)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.0=Added flood fill algorithm so the contour is now filled'", shell=True)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.1=Added interpolation when drawing the rt contour'", shell=True)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.2=Added support for more than 1 contour'", shell=True)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.3=Added so you can execute directories of severel RT and scanning files at once'", shell=True)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.4=Added version control in the minc header file'", shell=True)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.5=Added a check so the script can now check if the rt matches a mnc file input'", shell=True)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.6=Added more dummy checks and error handling'", shell=True)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.7=Added option to give MR,PET,ADC,RT as input to plot the ADC,SUV values using an R Scatterplot'", shell=True)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.8=Silenced printing to print use ---verbose'", shell=True)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 2.0=The rtx2mnc is written anew in python instead. Gives increased contour accuracy'", shell=True)
     else:
         #print "Resampling files"
         subprocess.call("mincresample -clobber -nearest_neighbour " + res + " -like " + like + " " + out, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.0=Added flood fill algorithm so the contour is now filled'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.1=Added interpolation when drawing the rt contour'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.2=Added support for more than 1 contour'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.3=Added so you can execute directories of severel RT and scanning files at once'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.4=Added version control in the minc header file'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.5=Added a check so the script can now check if the rt matches a mnc file input'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.6=Added more dummy checks and error handling'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.7=Added option to give MR,PET,ADC,RT as input to plot the ADC,SUV values using an R Scatterplot'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call("minc_modify_header " + out + " -sinsert 'rtx2mnc:Version 1.8=Added easy progress print, print advanced use ---verbose'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.0=Added flood fill algorithm so the contour is now filled'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.1=Added interpolation when drawing the rt contour'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.2=Added support for more than 1 contour'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.3=Added so you can execute directories of severel RT and scanning files at once'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.4=Added version control in the minc header file'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.5=Added a check so the script can now check if the rt matches a mnc file input'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.6=Added more dummy checks and error handling'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 1.7=Added option to give MR,PET,ADC,RT as input to plot the ADC,SUV values using an R Scatterplot'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call("minc_modify_header " + out + " -sinsert 'pyrtx2mnc:Version 2.0=The rtx2mnc is written anew in python instead. Gives increased contour accuracy'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
 
 
@@ -187,10 +188,10 @@ def rtx2mnc_dirscp(Directory, definedon, rtfile, outname, argprint):
     if not os.path.exists(Directory):
         os.mkdir(Directory)
     if(argprint == True):
-        subprocess.call("rtx2mnc " + definedon +  " " + rtfile +  " " + Directory +  "/" + outname, shell=True)
+        subprocess.call("pyrtx2mnc " + rtfile +  " " + definedon +  " " + Directory +  "/" + outname + " --verbose", shell=True)
     else:
         print "Converting rt file to .mnc"
-        subprocess.call("rtx2mnc " + definedon +  " " + rtfile +  " " + Directory +  "/" + outname, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call("pyrtx2mnc " + rtfile +  " " + definedon +  " " + Directory +  "/" + outname, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
 #argscan is a mincfile, we check if the mincfiles studyuid matches with the rt file, if the case then run rtx2mnc
 def verifymincfile_dirscp(argmr, StudyUIDRT, out, argRT, SeriesInsUID, argprint, argForceRT):
@@ -332,9 +333,10 @@ def replace_withspace(string):
         if char in string:
             string=string.replace(char," ")
     return string
-#Creates our outdirectory and runs rtx2mnc with the files in defondir and rtdir and places teh files in outdir.
+#Creates our outdirectory and runs rtx2mnc with the files in defondir and rtdir and places the files in outdir.
 #For later use we also put the patientid(CPR) inside the mincheader
 def rtx2mnc(DefOnDir, outDir, rtDir, argprint):
+
     Dir = cwd + "/" + DefOnDir
     outDir = cwd + "/" + outDir
     rtDir = cwd + "/" + rtDir
@@ -351,11 +353,11 @@ def rtx2mnc(DefOnDir, outDir, rtDir, argprint):
                     DefinedOnFile = Dir + "/" + scan
                     outtmp = str(commands.getstatusoutput('mincheader ' + DefinedOnFile + ' |grep 0x0010:el_0x0020')[1].split('"')[1::2][0])
                     if(argprint == True):
-                        subprocess.call("rtx2mnc " + DefinedOnFile  + " " + rtfile + " " + outDir + "/" + rt + ".mnc", shell=True)
+                        subprocess.call("pyrtx2mnc " + rtfile +  " " + definedon + " " + outDir + "/" + rt + ".mnc" " --verbose", shell=True)
                         checkrtx2mnc(outDir + "/" + rt + ".mnc")
                         subprocess.call("minc_modify_header " + outDir + "/" + rt + ".mnc" + " -sinsert 'patientid:number=" + outtmp + "'", shell=True)
                     else:
-                        subprocess.call("rtx2mnc " + DefinedOnFile  + " " + rtfile + " " + outDir + "/" + rt + ".mnc", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+                        subprocess.call("pyrtx2mnc " + rtfile +  " " + definedon + " " + outDir + "/" + rt + ".mnc", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
                         checkrtx2mnc(outDir + "/" + rt + ".mnc")
                         subprocess.call("minc_modify_header " + outDir + "/" + rt + ".mnc" + " -sinsert 'patientid:number=" + outtmp + "'", shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
                     print "Converting rt file from DICOM to .minc: ", ite, "/", len(os.listdir(rtDir))

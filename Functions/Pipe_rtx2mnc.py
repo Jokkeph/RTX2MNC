@@ -10,7 +10,7 @@ import functions as f
 ##### Supervisor: Flemming Littrup Andersen                                                             #####
 #############################################################################################################
 
-def main(argPET, argRT, argRevRes, argmr, argForceRT, argprint):
+def main(argPET, argRT, argRevRes, argmr, argForceRT, argprint, RTOut):
     ########################################## End function section ##########################################
 
     ####################################### Begin value setting section ######################################
@@ -18,7 +18,6 @@ def main(argPET, argRT, argRevRes, argmr, argForceRT, argprint):
     PET = "PETmnc"
     MR = "MRmnc"
     RT = "RT"
-    RTOut = "Resampled"
     #Get Current dir
     cwd = os.getcwd()
     ####################################### End value setting section ########################################
@@ -64,7 +63,6 @@ def main(argPET, argRT, argRevRes, argmr, argForceRT, argprint):
         #Case of f.Resample_dirscp file input being a mnc file
         elif os.path.isdir(argmr) and argPET.endswith('.mnc'):
             tmp, DateTime = f.fetchStudyID_dirscp(argmr, StudyUIDRT, SeriesInsUID, argForceRT, False)
-            print tmp, DateTime
             #Change mr.dcm files into mr.mnc and run f.rtx2mnc_dirscp
             newname = f.dcm2mnc_dirscp(MR, argmr, MR, DateTime, tmp, argprint)
             f.rtx2mnc_dirscp(RT, newname, argRT, tmp + ".mnc", argprint)
@@ -129,7 +127,6 @@ def main(argPET, argRT, argRevRes, argmr, argForceRT, argprint):
             #Fetch some dicom tags and rename the file to the tmp value.
             outtmp = f.verifymincfile_dirscp(argPET, StudyUIDRT, RT, argRT, SeriesInsUID, argprint, argForceRT)
             #Resamples, the flag --RevRes choses which direction it ersamples
-            print "Test", outtmp + ".mnc"
             if argRevRes == False and f.checkrtx2mnc_dirscp(RT,  outtmp) == True:
                 #Terminal command mincresample -nearest_neighbour OutRT/20150602_113952.mnc -like PETmnc/20150602_113952.mnc out_resamp.mnc
                 f.Resample_dirscp(RTOut, RT + "/" + outtmp, argPET + " ", RTOut + "/" + outtmp, argprint)

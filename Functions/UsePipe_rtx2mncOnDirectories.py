@@ -11,12 +11,11 @@ import functions as f
 ##### Supervisor: Flemming Littrup Andersen                                                             #####
 #############################################################################################################
 
-def main(argmr, argpet, argrt, argrevres, argforcert, argauto, argkeepmnc, argprint):
+def main(argmr, argpet, argrt, argrevres, argforcert, argauto, argkeepmnc, argprint, RTOut="Resampled"):
     #Tmpfoldernames
     PET = "PETmnc"
     MR = "MRmnc"
     RT = "RT"
-    RTOut = "Resampled"
     cwd = os.getcwd()
     #Erase the folders we wanna make
     os.system("rm -r -f " + PET + " " + MR + " " + RT)
@@ -32,7 +31,7 @@ def main(argmr, argpet, argrt, argrevres, argforcert, argauto, argkeepmnc, argpr
                 rest = RTlist[k].split('_', 1)[0].split(argrt + "/", 1)[1]
                 rtlistpath = RTlist[k].split(argrt + "/", 1)[1]
                 if (MRlist[i] == rest):
-                    Pipe_rtx2mnc.main(argpet + "/" + PETlist[i], argrt + "/" + rtlistpath, argrevres, argmr + "/" + MRlist[i], argforcert, argprint)
+                    Pipe_rtx2mnc.main(argpet + "/" + PETlist[i], argrt + "/" + rtlistpath, argrevres, argmr + "/" + MRlist[i], argforcert, argprint, RTOUT)
 
 
     #Check if both arguments are directories
@@ -45,12 +44,12 @@ def main(argmr, argpet, argrt, argrevres, argforcert, argauto, argkeepmnc, argpr
                 rest = RTlist[k].split('_', 1)[0].split(argrt + "/", 1)[1]
                 rtlistpath = RTlist[k].split(argrt + "/", 1)[1]
                 if (PETlist[i] == rest):
-                    Pipe_rtx2mnc.main(argpet + "/" + PETlist[i], argrt + "/" + rtlistpath, argrevres, argmr, argforcert, argprint)
+                    Pipe_rtx2mnc.main(argpet + "/" + PETlist[i], argrt + "/" + rtlistpath, argrevres, argmr, argforcert, argprint, RTOut)
 
 
     else:
         if os.path.isdir(argrt) == False:
-            Pipe_rtx2mnc.main(argpet, argrt, argrevres, argmr, argforcert, argprint)# do whatever is in Pipe_rtx2mnc
+            Pipe_rtx2mnc.main(argpet, argrt, argrevres, argmr, argforcert, argprint, RTOut)# do whatever is in Pipe_rtx2mnc
         else:
             print "RT input is a directory please consider using the --Auto option or change the input"
 
